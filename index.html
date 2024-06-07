@@ -76,9 +76,9 @@
     canvas.height = height * dpi;
     ctx.scale(dpi, dpi);
 
-    const waitTime = 2000;
+    const waitTime = 5000;
     const growthSpeed = 120; // ms
-    const depthToHeightRatio = .535 // lower is taller
+    const depthToHeightRatio = .545 // lower is taller
     const heightHeader = 100; // 200, but the tree is drawn 100 pixels below bottom
     let maxDepth = randMaxDepth();
     let color = randColour();
