@@ -78,7 +78,7 @@
 
     const waitTime = 2000;
     const growthSpeed = 120; // ms
-    const heightPerDepth = .57;
+    const depthToHeightRatio = .535 // lower is taller
     const heightHeader = 100; // 200, but the tree is drawn 100 pixels below bottom
     let maxDepth = randMaxDepth();
     let color = randColour();
@@ -87,7 +87,7 @@
     let queue = [];
     let currentDepth = 0;
 
-    function scalingFactor() { return (height - heightHeader) / (heightPerDepth * maxDepth ** 2); }
+    function scalingFactor() { return (height - heightHeader) / (depthToHeightRatio * maxDepth ** 2); }
     function randMaxDepth() { return Math.floor(Math.random() * 7) + 10; }
     function randColour() { return `hsl(${Math.random() * 360}, 50%, 80%)`; }
     function randThickness() { return Math.random() + 1; }
