@@ -76,8 +76,8 @@
     canvas.height = height * dpi;
     ctx.scale(dpi, dpi);
 
-    const waitTime = 5000;
-    const growthSpeed = 120; // ms
+    const waitTime = 4000;
+    const growthSpeed = 90; // ms
     const depthToHeightRatio = .545 // lower is taller
     const heightHeader = 100; // 200, but the tree is drawn 100 pixels below bottom
     let maxDepth = randMaxDepth();
@@ -89,8 +89,13 @@
 
     function scalingFactor() { return (height - heightHeader) / (depthToHeightRatio * maxDepth ** 2); }
     function randMaxDepth() { return Math.floor(Math.random() * 7) + 10; }
-    function randColour() { return `hsl(${Math.random() * 360}, 50%, 80%)`; }
-    function randThickness() { return Math.random() + 1; }
+    function randThickness() { return Math.random() + 0.25; }
+    function randColour() {
+      const hue = Math.random() * 360;
+      const saturation = 30 + Math.random() * 30; // 30-60
+      const lightness = 40 + Math.random() * 35;  // 40-75
+      return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+    }
 
     function drawTree(x, y, angle, depth, currentDepth = 0) {
       if (depth === 0) return;
