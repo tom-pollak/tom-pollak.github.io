@@ -1,4 +1,4 @@
-# Applying μTransfer to Scaling Sparse Autoencoders
+# Applying μTransfer to Scale Sparse Autoencoders
 
 In this post, we'll explore how to apply μTransfer (Maximal Update Parameterization) to scale a Sparse Autoencoder (SAE), by increasing the hidden dimension (`d_sae`) of your SAE (i.e., increase the expansion factor). We want to apply μTransfer to ensure consistent training dynamics across different scales of the hidden dimension.
 
