@@ -9,6 +9,9 @@ This work is heavily based on [The Practitioner's Guide to the Maximal Update Pa
 - **Consistent Training Dynamics**: Ensures activations, gradients, and weight updates remain consistent across expansion factors.
 - **Simplified Scaling**: Only parameters connected to the scaled dimension (`d_sae`) are adjusted.
 - **Stable Training**: Prevents issues like exploding activations / gradients.
+- **Stable Hyperparameters**: No need to sweep learning rates, however this method doesn't solve regularization parameters.
+
+> **TL;DR**: Jump to [Scaling Rules](https://tom-pollak.github.io/pages/mutransfer_sae.html#:~:text=Scaling%20Rules%20Summary) to find how to scale initialization & learning rates.
 
 ## Original SAE
 
@@ -55,21 +58,23 @@ Our goal is to scale up the `expansion_factor`, (and therefore `d_sae`) and appl
 - Input and Output Dimension (Fixed): $d_{\text{model}}$
 - Expansion Factor: $\text{expansion_factor}$
 - Hidden Dimension: $d_{\text{sae}} = \text{expansion_factor} \times d_{\text{model}}$
-- Width Multiplier: $m_d = \frac{\text{expansion_factor}}{\text{expansion_factor}_{\text{base}}}$
 - Base Initialization Variance: $\sigma_{\text{base}}^2$
 - Base Learning Rate: $\eta_{\text{base}}$
+- **Width Multiplier**: $m_d = \frac{\text{expansion_factor}}{\text{expansion_factor}_{\text{base}}}$
 
 ### Scaling Principles
 
 - Parameters connected to scaled dimensions: Adjust initialization variance and learning rate inversely with $m_d$
 - Parameters connecting only to fixed dimensions: Keep the same.
-- Output Scaling: Apply an output scaling factor to maintain consistent variance in the output. Specifically, multiply the decoder's output by $\alpha_{\text{output}} = \frac{1}{m_d}$.
+- Output Scaling: Scale decoder's output by $\alpha_{\text{output}} = \frac{1}{m_d}$.
 
-## Derivations for each parameter
+---
 
-### Decoder Weights (`W_dec`)
+[TODO I'm going to derive the initialization variance and learning rate for each of the weights based on the forwards and backwards pass]
 
-> Starting with the decoder weights, since these are most interesting
+## Decoder Weights (`W_dec`)
+
+> Only `W_dec` is scaled by $d_\text{sae}$, all other parameters in the model may remain fixed.
 
 Dimensions: $d_{\text{sae}} \times d_{\text{model}}$
 
@@ -78,7 +83,7 @@ $$
 \text{recon} = \text{acts} \times W_{\text{dec}} + b_{\text{dec}}
 $$
 
-#### Variance of Reconstruction
+### Forward Pass
 
 To maintain consistent training dynamics across different $d_{\text{sae}}$, we need to ensure variance of $\text{recon}$ remains constant.
 
@@ -110,7 +115,7 @@ $$
 \implies \text{Var}(\text{recon}) = \text{Var}(\text{acts}) \times \sigma^2_{\text{base}} \times d_{\text{sae, base}}
 $$
 
-#### Scaling Learning Rate
+### Backwards Pass
 
 Update to $W_{\text{dec}}$ with SGD:
 
@@ -121,17 +126,19 @@ $$
 - $\eta W_{\text{dec}}$: Learning rate of $W_{\text{dec}}$
 - $\nabla_{W_{\text{dec}}}\mathcal{L}$: Gradient of loss w.r.t $W_{\text{dec}}$
 
+Gradient w.r.t $W_\text{dec}$:
+
 $$
 \nabla_{W_{\text{dec}}}\mathcal{L} = \text{acts}^\top \nabla_{\text{recon}}\mathcal{L}
 $$
 
-Since $\text{acts}$ is of size $d_\text{sae}$, scaling $d_\text{sae}$ affects the magnitude of the gradient. To keep the magnitude constant we can scale the learning rate inversely with $m_d$, which should compensate for the increase in gradient magnitude.
+Since $\text{acts}$ has dimension $d_\text{sae}$, scaling $d_\text{sae}$ affects the magnitude of the gradient. To keep the magnitude constant we can scale the learning rate inversely with $m_d$.
 
 $$
 \eta_{W_\text{dec}} = \frac{\eta_\text{base}}{m_d}
 $$
 
-#### Output Scaling
+### Output Scaling
 
 Even after adjusting initialization variance and learning rate of $W_\text{dec}$, there is an additional factor that can cause variance to increase during training -- [the development of correlations between weights and activations.](https://blog.eleuther.ai/mutransfer/#:~:text=Since%20we%20have,the%20complexity%20here)
 
@@ -155,36 +162,117 @@ $$
 \text{recon} = (\text{acts} \times W_\text{dec} + b_\text{dec}) \times \alpha_\text{output}, \quad \alpha_\text{output} = \frac{1}{m_d}
 $$
 
-### Encoder Weights (`W_enc`)
+## Encoder Weights (`W_enc`)
 
 Dimensions: $d_{\text{model}} \times d_{\text{sae}}$
 
-#### Variance of Pre-Activations
+### Forward Pass
+
+Encoder computes pre-activations:
+
+$$
+\text{pre_acts} = \text{input_acts} \times W_\text{enc} + b_\text{enc}
+$$
+
+Breaking down the matrix multiply:
+
+$$
+\text{pre_acts}_i = \sum\limits^{d_\text{model}}_{k = 1}{\text{input_acts}_k \times W_{\text{enc}, k, i} + b_{\text{enc}, i}}
+$$
+
+A.k.a each $\text{pre_acts}$ is a sum over $d_\text{model}$ terms. Since $d_\text{model}$ is fixed, scaling $d_\text{sae}$ does _not_ affect the variance of $\text{pre_acts}$
 
 $$
 \text{Var}(\text{pre_acts}) = \text{Var}(\text{input_acts}) \times \text{Var}(W_{\text{enc}}) \times d_{\text{model}}
 $$
 
-The variance of $\text{pre_acts}$ is not affected by scaling $d_{\text{sae}}$, therefore no scaling is needed. Similarly, the gradient magnitudes are not dependent on $d_\text{model}$ 
+### Backwards Pass
 
-### Encoder bias (`b_enc`) & `threshold`
+Gradient w.r.t $W_\text{enc}$:
+
+$$
+\nabla_{W_{\text{enc}}}\mathcal{L} = \text{input_acts}^\top \nabla_{\text{pre_acts}}\mathcal{L}
+$$
+
+- $\text{input_acts}^{\top}$ has dimensions $d_\text{model} \times \text{batch_size}$.
+- $\nabla_{\text{pre_acts}}\mathcal{L}$ has dimensions $\text{batch_size} \times d_\text{sae}$.
+- $\implies \nabla_{W_\text{enc}}\mathcal{L}$ has dimensions $d_\text{model} \times d_\text{sae}$.
+
+Gradient w.r.t $\text{pre_acts}$:
+
+$$
+\nabla_{\text{pre_acts}}\mathcal{L} = \nabla_{\text{acts}}\mathcal{L} \odot \nabla_{\text{pre_acts}}\text{acts}
+$$
+
+- $\nabla_{\text{pre_acts}}\text{acts}$ is a binary mask of active neurons.
+
+
+Variance of $\nabla_{\text{pre_acts}}\mathcal{L}$:
+
+$$
+\text{Var}(\nabla_{\text{pre_acts}}\mathcal{L}) = \text{Var}(\nabla_{\text{acts}}\mathcal{L}) \times p_\text{active}
+$$
+
+- $p_\text{active}$ is the probability that a neuron is active (approximately constant).
+
+#### Dependence on Decoder Weights ($W_\text{dec}$)
+
+$$
+\nabla_{\text{acts}}\mathcal{L} = \nabla_{\text{recon}}\mathcal{L} \times W_\text{dec}^{\top}
+$$
+
+- $W_\text{dec}^{\top}$ has dimensions $d_\text{model} \times d_\text{sae}$.
+
+- As $d_\text{sae}$ increases, $W_\text{dec}$ becomes larger, affecting the variance of $\nabla_{\text{acts}}\mathcal{L}$ and consequently $\nabla_{\text{pre_acts}}\mathcal{L}$.
+
+#### Variance of Each Element in $\nabla_{W_\text{enc}}\mathcal{L}$
+
+- Each element of $\nabla_{W_\text{enc}}\mathcal{L}$ is computed as:
+
+$$
+[\nabla_{W_\text{enc}}\mathcal{L}]_{ij} = \sum_{n=1}^{\text{batch_size}} \text{input_acts}_{ni} \times [\nabla_{\text{pre_acts}}\mathcal{L}]_{nj}
+$$
+
+- The variance of each element depends on $\text{Var}(\text{input_acts})$ and $\text{Var}(\nabla_{\text{pre_acts}}\mathcal{L})$.
+
+- Since $\text{Var}(\nabla_{\text{pre_acts}}\mathcal{L})$ increases with $d_\text{sae}$ (due to $W_\text{dec}$), the variance of each element in $\nabla_{W_\text{enc}}\mathcal{L}$ also increases with $d_\text{sae}$.
+
+#### Scaling Total Number of Elements
+
+Total number of elements in $\nabla_{W_\text{enc}}\mathcal{L}$ is $d_\text{model} \times d_\text{sae}$ (derived above).
+
+- As $d_\text{sae}$ increases, the total number of elements increases proportionally, scaling the magnitude of the gradient.
+
+### Scaling Parameters
+
+That was a lot of math, but to maintain consistent training dynamics, we should scale:
+
+**Learning Rate**: $\eta_{W_\text{enc}} = \eta_\text{base} / m_d$.
+
+- Compensates for increased gradient magnitude.
+
+**Initialization Variance**: $\text{Var}(W_\text{enc}) = \sigma^2_\text{base} / m_d$.
+
+- Counteracts increased variance in gradients.
+
+## Encoder bias (`b_enc`) & `threshold`
 
 Similar to `W_enc`, these parameters connect to the encoder's $\text{pre_act}$, which do not depend on $d_{\text{sae}}$. Therefore no scaling is needed.
 
-### Decoder Bias (`b_dec`)
+## Decoder Bias (`b_dec`)
 
 Connects directly to $d_{\text{model}}$, no scaling needed
 
 ## Scaling Rules Summary
 
-| Parameter                              | Initialization Variance                                     | Learning Rate                    |
-| -------------------------------------- | ----------------------------------------------------------- | -------------------------------- |
-| Encoder Weights ($W_{\text{enc}}$)     | $\sigma^2_{\text{base}}$                                    | $\eta_{\text{base}}$             |
-| **Decoder Weights ($W_{\text{dec}}$)** | $\frac{\sigma^2_{\text{base}}}{m_d}$                        | $\frac{\eta_{\text{base}}}{m_d}$ |
-| Encoder Bias ($b_{\text{enc}}$)        | $\sigma^2_{\text{base}}$                                    | $\eta_{\text{base}}$             |
-| ($\text{threshold}$)                   | $\sigma^2_{\text{base}}$                                    | $\eta_{\text{base}}$             |
-| Decoder Bias ($b_{\text{dec}}$)        | $\sigma^2_{\text{base}}$                                    | $\eta_{\text{base}}$             |
-| **Output Scaling**                     | Multiply output by $\alpha_{\text{output}} = \frac{1}{m_d}$ | N/A                              |
+| Parameter                          | Initialization Variance                                     | Learning Rate                    |
+| -----------------------------------| ----------------------------------------------------------- | -------------------------------- |
+| Encoder Weights ($W_{\text{enc}}$) | $\sigma^2_{\text{base}}$                                    | $\frac{\eta_{\text{base}}}{m_d}$ |
+| Decoder Weights ($W_{\text{dec}}$) | $\frac{\sigma^2_{\text{base}}}{m_d}$                        | $\frac{\eta_{\text{base}}}{m_d}$ |
+| Encoder Bias ($b_{\text{enc}}$)    | $\sigma^2_{\text{base}}$                                    | $\eta_{\text{base}}$             |
+| threshold                          | $\sigma^2_{\text{base}}$                                    | $\eta_{\text{base}}$             |
+| Decoder Bias ($b_{\text{dec}}$)    | $\sigma^2_{\text{base}}$                                    | $\eta_{\text{base}}$             |
+| Output Scaling                     | Multiply output by $\alpha_{\text{output}} = \frac{1}{m_d}$ | N/A                              |
 
 ## Updated SAE with μTransfer Scaling
 
