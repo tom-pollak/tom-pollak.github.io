@@ -180,7 +180,7 @@ Connects directly to $d_{\text{model}}$, no scaling needed
 | Encoder Weights ($W_{\text{enc}}$)     | $\sigma^2_{\text{base}}$                                    | $\eta_{\text{base}}$             |
 | **Decoder Weights ($W_{\text{dec}}$)** | $\frac{\sigma^2_{\text{base}}}{m_d}$                        | $\frac{\eta_{\text{base}}}{m_d}$ |
 | Encoder Bias ($b_{\text{enc}}$)        | $\sigma^2_{\text{base}}$                                    | $\eta_{\text{base}}$             |
-| Threshold ($\text{threshold}$)         | $\sigma^2_{\text{base}}$                                    | $\eta_{\text{base}}$             |
+| ($\text{threshold}$)                   | $\sigma^2_{\text{base}}$                                    | $\eta_{\text{base}}$             |
 | Decoder Bias ($b_{\text{dec}}$)        | $\sigma^2_{\text{base}}$                                    | $\eta_{\text{base}}$             |
 | **Output Scaling**                     | Multiply output by $\alpha_{\text{output}} = \frac{1}{m_d}$ | N/A                              |
 
