@@ -1,6 +1,8 @@
 # Applying μTransfer to Scale Sparse Autoencoders
 
-In this post, we'll explore how to apply μTransfer (Maximal Update Parameterization) to scale a Sparse Autoencoder (SAE), by increasing the hidden dimension (`d_sae`) of your SAE (i.e., increase the expansion factor). We want to apply μTransfer to ensure consistent training dynamics across different scales of the hidden dimension.
+> 26 September 2024
+
+In this post, we'll explore how to apply [μTransfer](https://arxiv.org/abs/2203.03466) (Maximal Update Parameterization) to scale a Sparse Autoencoder (SAE), by increasing the hidden dimension (`d_sae`) of your SAE (i.e., increase the expansion factor). We want to apply μTransfer to ensure consistent training dynamics across different scales of the hidden dimension.
 
 This work is heavily based on [The Practitioner's Guide to the Maximal Update Parameterization](https://blog.eleuther.ai/mutransfer/) (please read this first). By applying μTransfer scaling to a model:
 
@@ -243,3 +245,8 @@ optimizer = torch.optim.AdamW([
     {'params': fixed_params, 'lr': lr_base}
 ])
 ```
+
+## References
+
+- [Tensor Programs V: Tuning Large Neural Networks via Zero-Shot Hyperparameter Transfer](https://arxiv.org/abs/2203.03466)
+- [The Practitioner's Guide to the Maximal Update Parameterization](https://blog.eleuther.ai/mutransfer/)
