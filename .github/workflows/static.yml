@@ -29,10 +29,11 @@ jobs:
         run: |
           sudo apt-get install pandoc -y
           mkdir -p proc
-          stylesheet="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.6.1/github-markdown.css"
           for file in md/*.md; do
             filename=$(basename "$file" .md)
-            pandoc "$file" -o "proc/$filename.html" --standalone -c "$stylesheet"
+            pandoc "$file" -o "proc/$filename.html" --standalone \
+              --template=markdown_template.html \
+              --mathjax
           done
 
       - name: Setup Pages
