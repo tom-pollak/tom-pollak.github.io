@@ -1,3 +1,4 @@
+echo "*****"
 mkdir -p pages
 for file in md/*.md; do
   filename=$(basename "$file" .md)
@@ -7,3 +8,4 @@ for file in md/*.md; do
     --mathjax
   echo "processed $filename"
 done
+echo "*****"
