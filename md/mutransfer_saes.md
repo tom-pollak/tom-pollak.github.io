@@ -1,3 +1,5 @@
+# Applying μTransfer to Scaling Sparse Autoencoders
+
 In this post, we'll explore how to apply μTransfer (Maximal Update Parameterization) to scale a Sparse Autoencoder (SAE), by increasing the hidden dimension (`d_sae`) of your SAE (i.e., increase the expansion factor). We want to apply μTransfer to ensure consistent training dynamics across different scales of the hidden dimension.
 
 This work is heavily based on [The Practitioner's Guide to the Maximal Update Parameterization](https://blog.eleuther.ai/mutransfer/) (please read this first). By applying μTransfer scaling to a model:
@@ -54,13 +56,15 @@ Our goal is to scale up the `expansion_factor`, (and therefore `d_sae`) and appl
 - Width Multiplier: $m_d = \frac{\text{expansion\_factor}}{\text{expansion\_factor}_{\text{base}}}$
 - Base Initialization Variance: $\sigma_{\text{base}}^2$
 - Base Learning Rate: $\eta_{\text{base}}$
+
 ### Scaling Principles
 
-- Parameters connected to scaled dimensions: Adjust initialization variance and learning rate _inversely with $m​_d$_.
+- Parameters connected to scaled dimensions: Adjust initialization variance and learning rate inversely with $m_d$
 - Parameters connecting only to fixed dimensions: Keep the same.
-- **Output Scaling**: Apply an output scaling factor to maintain consistent variance in the output. Specifically, multiply the decoder's output by $\alpha_{\text{output}} = \frac{1}{m_d}$.
+- Output Scaling: Apply an output scaling factor to maintain consistent variance in the output. Specifically, multiply the decoder's output by $\alpha_{\text{output}} = \frac{1}{m_d}$.
 
 ## Derivations for each parameter
+
 ### Decoder Weights (`W_dec`)
 
 > Starting with the decoder weights, since these are most interesting
@@ -71,44 +75,60 @@ Reconstruction output:
 $$
 \text{recon} = \text{acts} \times W_{\text{dec}} + b_{\text{dec}}
 $$
+
 #### Variance of Reconstruction
 
 To maintain consistent training dynamics across different $d_{\text{sae}}$, we need to ensure variance of $\text{recon}$ remains constant.
 
 At initialization, $\text{acts}$ and $W_{\text{dec}}$ have 0 mean and are independent.
+
 $$
 \text{Var}(\text{recon}) = \text{Var}(\text{acts} \times W_{\text{dec}}) = \text{Var}(\text{acts}) \times \text{Var}(W_{\text{dec}}) \times d_{\text{sae}}
 $$
+
 Since $d_{\text{sae}}$ scales with $m_d$ -- $(d_{\text{sae}} = m_d \times d_{\text{sae, base}})$
+
 $$
 \implies \text{Var}(\text{recon}) = \text{Var}(\text{acts}) \times \text{Var}(W_{\text{dec}}) \times (m_d \times d_{\text{sae, base}})
 $$
+
 To keep $\text{Var}(\text{recon})$ constant across scales, we need to scale $\text{Var}(W_{\text{dec}})$ inversely with $m_d$
+
 $$
 \text{Var}(W_{\text{dec}}) = \frac{\sigma^2_{\text{base}}}{m_d}
 $$
+
 Substituting in:
+
 $$
 \text{Var}(\text{recon}) = \text{Var}(\text{acts}) \times \left(\frac{\sigma^2_{\text{base}}}{m_d}\right) \times (m_d \times d_{\text{sae, base}})
 $$
+
 $$
 \implies \text{Var}(\text{recon}) = \text{Var}(\text{acts}) \times \sigma^2_{\text{base}} \times d_{\text{sae, base}}
 $$
+
 #### Scaling Learning Rate
 
 Update to $W_{\text{dec}}$ with SGD:
+
 $$
 \Delta W_{\text{dec}} = -\eta W_{\text{dec}} \nabla_{W_{\text{dec}}}\mathcal{L}
 $$
+
 - $\eta W_{\text{dec}}$: Learning rate of $W_{\text{dec}}$
 - $\nabla_{W_{\text{dec}}}\mathcal{L}$: Gradient of loss w.r.t $W_{\text{dec}}$
+
 $$
 \nabla_{W_{\text{dec}}}\mathcal{L} = \text{acts}^\top \nabla_{\text{recon}}\mathcal{L}
 $$
+
 Since $\text{acts}$ is of size $d_\text{sae}$, scaling $d_\text{sae}$ affects the magnitude of the gradient. To keep the magnitude constant we can scale the learning rate inversely with $m_d$, which should compensate for the increase in gradient magnitude.
+
 $$
 \eta_{W_\text{dec}} = \frac{\eta_\text{base}}{m_d}
 $$
+
 #### Output Scaling
 
 Even after adjusting initialization variance and learning rate of $W_\text{dec}$, there is an additional factor that can cause variance to increase during training -- [the development of correlations between weights and activations.](https://blog.eleuther.ai/mutransfer/#:~:text=Since%20we%20have,the%20complexity%20here)
@@ -120,18 +140,29 @@ Even after adjusting initialization variance and learning rate of $W_\text{dec}$
 
 Using the above steps, we can see how reconstruction variance is proportional to $m_d$. With a larger $m_d$, there are more parameters contributing to correlation and increase in variance.
 
-$$ \text{Var}(\text{recon}) = \text{Var}(\text{acts} \times W_{\text{dec}}) = \text{Var}(\text{acts}) \times \text{Var}(W_{\text{dec}}) \times d_{\text{sae}} $$
-$$ \implies \text{Var}(\text{recon}) \propto m_d $$
+$$
+\text{Var}(\text{recon}) = \text{Var}(\text{acts} \times W_{\text{dec}}) = \text{Var}(\text{acts}) \times \text{Var}(W_{\text{dec}}) \times d_{\text{sae}}
+$$
+$$
+\implies \text{Var}(\text{recon}) \propto m_d
+$$
 
 Therefore $\text{Var}(\text{recon})$ grows as $m_d$ increases, scaling inversely $m_d$ helps control the output variance.
-$$ \text{recon} = (\text{acts} \times W_\text{dec} + b_\text{dec}) \times \alpha_\text{output}, \quad \alpha_\text{output} = \frac{1}{m_d} $$
+
+$$
+\text{recon} = (\text{acts} \times W_\text{dec} + b_\text{dec}) \times \alpha_\text{output}, \quad \alpha_\text{output} = \frac{1}{m_d}
+$$
+
 ### Encoder Weights (`W_enc`)
+
 Dimensions: $d_{\text{model}} \times d_{\text{sae}}$
 
 #### Variance of Pre-Activations
+
 $$
 \text{Var}(\text{pre\_acts}) = \text{Var}(\text{input\_acts}) \times \text{Var}(W_{\text{enc}}) \times d_{\text{model}}
 $$
+
 The variance of $\text{pre\_acts}$ is not affected by scaling $d_{\text{sae}}$, therefore no scaling is needed. Similarly, the gradient magnitudes are not dependent on $d_\text{model}$ 
 
 ### Encoder bias (`b_enc`) & `threshold`
@@ -139,7 +170,9 @@ The variance of $\text{pre\_acts}$ is not affected by scaling $d_{\text{sae}}$, 
 Similar to `W_enc`, these parameters connect to the encoder's $\text{pre\_act}$, which do not depend on $d_{\text{sae}}$. Therefore no scaling is needed.
 
 ### Decoder Bias (`b_dec`)
+
 Connects directly to $d_{\text{model}}$, no scaling needed
+
 ## Scaling Rules Summary
 
 | Parameter                              | Initialization Variance                                     | Learning Rate                    |
@@ -150,6 +183,7 @@ Connects directly to $d_{\text{model}}$, no scaling needed
 | Threshold ($\text{threshold}$)         | $\sigma^2_{\text{base}}$                                    | $\eta_{\text{base}}$             |
 | Decoder Bias ($b_{\text{dec}}$)        | $\sigma^2_{\text{base}}$                                    | $\eta_{\text{base}}$             |
 | **Output Scaling**                     | Multiply output by $\alpha_{\text{output}} = \frac{1}{m_d}$ | N/A                              |
+
 ## Updated SAE with μTransfer Scaling
 
 ```python
