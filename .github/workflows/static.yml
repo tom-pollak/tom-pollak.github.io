@@ -29,9 +29,10 @@ jobs:
         run: |
           sudo apt-get install pandoc -y
           mkdir -p proc
+          stylesheet="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.6.1/github-markdown-light.min.css"
           for file in md/*.md; do
             filename=$(basename "$file" .md)
-            pandoc "$file" -o "proc/$filename.html" --standalone
+            pandoc "$file" -o "proc/$filename.html" --standalone -c "$stylesheet"
           done
 
       - name: Setup Pages
