@@ -15,7 +15,7 @@ This work is heavily based on [The Practitioner's Guide to the Maximal Update Pa
 
 ## Original SAE
 
-Our SAE model, `JumpReLUSAE`, taken from [Gemma Scope from Scratch](https://colab.research.google.com/drive/17dQFYUYnuKnP6OwQPH9v_GSYUW5aj-Rp#scrollTo=8wy7DSTaRc90)
+Our SAE model, `JumpReLUSAE`, from [Gemma Scope from Scratch](https://colab.research.google.com/drive/17dQFYUYnuKnP6OwQPH9v_GSYUW5aj-Rp#scrollTo=8wy7DSTaRc90)
 
 ```python
 import torch
