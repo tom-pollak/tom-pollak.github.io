@@ -28,10 +28,10 @@ jobs:
       - name: Convert Markdown to HTML
         run: |
           sudo apt-get install pandoc -y
-          mkdir -p proc
+          mkdir -p pages
           for file in md/*.md; do
             filename=$(basename "$file" .md)
-            pandoc "$file" -o "proc/$filename.html" \
+            pandoc "$file" -o "pages/$filename.html" \
               --template=markdown_template.html \
               --mathjax
           done
