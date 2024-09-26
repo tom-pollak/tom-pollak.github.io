@@ -160,7 +160,7 @@ Dimensions: $d_{\text{model}} \times d_{\text{sae}}$
 #### Variance of Pre-Activations
 
 $$
-\text{Var}(\text{pre_acts}) = \text{Var}(\text{input\_acts}) \times \text{Var}(W_{\text{enc}}) \times d_{\text{model}}
+\text{Var}(\text{pre_acts}) = \text{Var}(\text{input_acts}) \times \text{Var}(W_{\text{enc}}) \times d_{\text{model}}
 $$
 
 The variance of $\text{pre_acts}$ is not affected by scaling $d_{\text{sae}}$, therefore no scaling is needed. Similarly, the gradient magnitudes are not dependent on $d_\text{model}$ 
