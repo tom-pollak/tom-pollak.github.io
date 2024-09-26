@@ -31,7 +31,7 @@ jobs:
           mkdir -p proc
           for file in md/*.md; do
             filename=$(basename "$file" .md)
-            pandoc "$file" -o "proc/$filename.html" --standalone \
+            pandoc "$file" -o "proc/$filename.html" \
               --template=markdown_template.html \
               --mathjax
           done

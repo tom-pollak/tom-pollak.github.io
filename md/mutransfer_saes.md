@@ -51,9 +51,9 @@ Our goal is to scale up the `expansion_factor`, (and therefore `d_sae`) and appl
 ### Definitions
 
 - Input and Output Dimension (Fixed): $d_{\text{model}}$
-- Expansion Factor: $\text{expansion\_factor}$
-- Hidden Dimension: $d_{\text{sae}} = \text{expansion\_factor} \times d_{\text{model}}$
-- Width Multiplier: $m_d = \frac{\text{expansion\_factor}}{\text{expansion\_factor}_{\text{base}}}$
+- Expansion Factor: $\text{expansion_factor}$
+- Hidden Dimension: $d_{\text{sae}} = \text{expansion_factor} \times d_{\text{model}}$
+- Width Multiplier: $m_d = \frac{\text{expansion_factor}}{\text{expansion_factor}_{\text{base}}}$
 - Base Initialization Variance: $\sigma_{\text{base}}^2$
 - Base Learning Rate: $\eta_{\text{base}}$
 
@@ -86,7 +86,7 @@ $$
 \text{Var}(\text{recon}) = \text{Var}(\text{acts} \times W_{\text{dec}}) = \text{Var}(\text{acts}) \times \text{Var}(W_{\text{dec}}) \times d_{\text{sae}}
 $$
 
-Since $d_{\text{sae}}$ scales with $m_d$ -- $(d_{\text{sae}} = m_d \times d_{\text{sae, base}})$
+Since $d_{\text{sae}}$ scales with $m_d$ $\quad (d_{\text{sae}} = m_d \times d_{\text{sae, base}})$
 
 $$
 \implies \text{Var}(\text{recon}) = \text{Var}(\text{acts}) \times \text{Var}(W_{\text{dec}}) \times (m_d \times d_{\text{sae, base}})
@@ -160,14 +160,14 @@ Dimensions: $d_{\text{model}} \times d_{\text{sae}}$
 #### Variance of Pre-Activations
 
 $$
-\text{Var}(\text{pre\_acts}) = \text{Var}(\text{input\_acts}) \times \text{Var}(W_{\text{enc}}) \times d_{\text{model}}
+\text{Var}(\text{pre_acts}) = \text{Var}(\text{input\_acts}) \times \text{Var}(W_{\text{enc}}) \times d_{\text{model}}
 $$
 
-The variance of $\text{pre\_acts}$ is not affected by scaling $d_{\text{sae}}$, therefore no scaling is needed. Similarly, the gradient magnitudes are not dependent on $d_\text{model}$ 
+The variance of $\text{pre_acts}$ is not affected by scaling $d_{\text{sae}}$, therefore no scaling is needed. Similarly, the gradient magnitudes are not dependent on $d_\text{model}$ 
 
 ### Encoder bias (`b_enc`) & `threshold`
 
-Similar to `W_enc`, these parameters connect to the encoder's $\text{pre\_act}$, which do not depend on $d_{\text{sae}}$. Therefore no scaling is needed.
+Similar to `W_enc`, these parameters connect to the encoder's $\text{pre_act}$, which do not depend on $d_{\text{sae}}$. Therefore no scaling is needed.
 
 ### Decoder Bias (`b_dec`)
 
