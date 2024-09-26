@@ -5,4 +5,5 @@ for file in md/*.md; do
     --template=markdown_template.html \
     --metadata title="$filename" \
     --mathjax
+  echo "processed $filename"
 done
