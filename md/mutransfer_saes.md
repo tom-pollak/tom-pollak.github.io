@@ -25,7 +25,7 @@ class JumpReLUSAE(nn.Module):
         self.threshold = nn.Parameter(torch.randn(self.d_sae) * sigma)
         self.b_enc = nn.Parameter(torch.randn(self.d_sae) * sigma)
         self.b_dec = nn.Parameter(torch.randn(d_model) * sigma)
-        
+
     def encode(self, input_acts):
         pre_acts = input_acts @ self.W_enc + self.b_enc
         mask = (pre_acts > self.threshold)
