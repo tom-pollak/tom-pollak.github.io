@@ -15,7 +15,7 @@ This work is heavily based on [The Practitioner's Guide to the Maximal Update Pa
 
 ## Original SAE
 
-Our SAE model, `JumpReLUSAE`, from [Gemma Scope from Scratch](https://colab.research.google.com/drive/17dQFYUYnuKnP6OwQPH9v_GSYUW5aj-Rp#scrollTo=8wy7DSTaRc90)
+Our SAE model, `JumpReLUSAE`, from [Gemma Scope from Scratch](https://colab.research.google.com/drive/17dQFYUYnuKnP6OwQPH9v_GSYUW5aj-Rp#scrollTo=8wy7DSTaRc90) (TODO: Gated SAE reference)
 
 ```python
 import torch
@@ -60,21 +60,19 @@ Our goal is to scale up the `expansion_factor`, (and therefore `d_sae`) and appl
 - Hidden Dimension: $d_{\text{sae}} = \text{expansion_factor} \times d_{\text{model}}$
 - Base Initialization Variance: $\sigma_{\text{base}}^2$
 - Base Learning Rate: $\eta_{\text{base}}$
-- **Width Multiplier**: $m_d = \frac{\text{expansion_factor}}{\text{expansion_factor}_{\text{base}}}$
+- **Width Multiplier**: $m_d = \text{expansion_factor}\ /\ \text{expansion_factor}_{\text{base}}$
 
 ### Scaling Principles
 
 - Parameters connected to scaled dimensions: Adjust initialization variance and learning rate inversely with $m_d$
 - Parameters connecting only to fixed dimensions: Keep the same.
-- Output Scaling: Scale decoder's output by $\alpha_{\text{output}} = \frac{1}{m_d}$.
+- Output Scaling: Scale decoder's output by $\alpha_{\text{output}} = 1\ /\ m_d$.
 
 ---
 
 [TODO I'm going to derive the initialization variance and learning rate for each of the weights based on the forwards and backwards pass]
 
 ## Decoder Weights (`W_dec`)
-
-> Only `W_dec` is scaled by $d_\text{sae}$, all other parameters in the model may remain fixed.
 
 Dimensions: $d_{\text{sae}} \times d_{\text{model}}$
 
@@ -85,9 +83,12 @@ $$
 
 ### Forward Pass
 
-To maintain consistent training dynamics across different $d_{\text{sae}}$, we need to ensure variance of $\text{recon}$ remains constant.
 
-At initialization, $\text{acts}$ and $W_{\text{dec}}$ have 0 mean and are independent.
+
+To maintain consistent training dynamics across different $d_{\text{sae}}$, we follow the derivation similar to the one in the [Forward Pass at Initialization](https://blog.eleuther.ai/mutransfer/#forward-pass-at-initialization) of the section of the EleutherAI blog post.
+
+- **Goal**: Ensure variance of $\text{recon}$ remains constant.
+- At initialization, $\text{acts}$ and $W_{\text{dec}}$ have 0 mean and are independent.
 
 $$
 \text{Var}(\text{recon}) = \text{Var}(\text{acts} \times W_{\text{dec}}) = \text{Var}(\text{acts}) \times \text{Var}(W_{\text{dec}}) \times d_{\text{sae}}
@@ -117,26 +118,19 @@ $$
 
 ### Backwards Pass
 
-Update to $W_{\text{dec}}$ with SGD:
-
-$$
-\Delta W_{\text{dec}} = -\eta W_{\text{dec}} \nabla_{W_{\text{dec}}}\mathcal{L}
-$$
-
-- $\eta W_{\text{dec}}$: Learning rate of $W_{\text{dec}}$
-- $\nabla_{W_{\text{dec}}}\mathcal{L}$: Gradient of loss w.r.t $W_{\text{dec}}$
-
-Gradient w.r.t $W_\text{dec}$:
+The gradient with respect to $W_\text{dec}$:
 
 $$
 \nabla_{W_{\text{dec}}}\mathcal{L} = \text{acts}^\top \nabla_{\text{recon}}\mathcal{L}
 $$
 
-Since $\text{acts}$ has dimension $d_\text{sae}$, scaling $d_\text{sae}$ affects the magnitude of the gradient. To keep the magnitude constant we can scale the learning rate inversely with $m_d$.
+Since $\text{acts}$ has dimension $d_\text{sae}$, scaling $d_\text{sae}$ affects the magnitude of the $\nabla_{W_{\text{dec}}}\mathcal{L}$ proportionally. To main consistent updates to $\Delta W_\text{dec}$, we scale the learning rate inversely with $m_d$:
 
 $$
 \eta_{W_\text{dec}} = \frac{\eta_\text{base}}{m_d}
 $$
+
+This aligns with the derivations in the [Effect of Weight Update on Activations](https://blog.eleuther.ai/mutransfer/#effect-of-weight-update-on-activations) section.
 
 ### Output Scaling
 
@@ -152,11 +146,15 @@ Using the above steps, we can see how reconstruction variance is proportional to
 $$
 \text{Var}(\text{recon}) = \text{Var}(\text{acts} \times W_{\text{dec}}) = \text{Var}(\text{acts}) \times \text{Var}(W_{\text{dec}}) \times d_{\text{sae}}
 $$
+
 $$
 \implies \text{Var}(\text{recon}) \propto m_d
 $$
 
 Therefore $\text{Var}(\text{recon})$ grows as $m_d$ increases, scaling inversely $m_d$ helps control the output variance.
+
+[We need to scale the decoder's output](https://blog.eleuther.ai/mutransfer/#effect-of-weight-update-on-activations:~:text=To%20ensure%20proper%20scales%20of%20activations%2C%20the%20output%20logit%20forward%20pass%20is%20scaled) by $\alpha_\text{output} = 1/m_d$ to counteract the variance increase due to developing correlations.
+
 
 $$
 \text{recon} = (\text{acts} \times W_\text{dec} + b_\text{dec}) \times \alpha_\text{output}, \quad \alpha_\text{output} = \frac{1}{m_d}
@@ -188,11 +186,118 @@ $$
 
 ### Backwards Pass
 
-Gradient w.r.t $W_\text{enc}$:
+The gradient with respect to $W_\text{enc}$:
 
 $$
 \nabla_{W_{\text{enc}}}\mathcal{L} = \text{input_acts}^\top \nabla_{\text{pre_acts}}\mathcal{L}
 $$
+
+Since $\nabla_{\text{pre_acts}}\mathcal{L}$ has dimensions affected by $d_\text{sae}$, the magnitude of $\nabla_{W_{\text{enc}}}\mathcal{L}$ increases with $m_d$. To maintain consistent weight updates, we scale learning rate and initialization variance inversely with $m_d$:
+
+$$
+\eta_{W_\text{enc}} = \frac{\eta_\text{base}}{m_d},\quad \text{Var}(W_\text{enc}) = \frac{\sigma^2_\text{base}}{m_d}
+$$
+
+You can see more detail of this in Appendix 1 and [ElutherAI's backwards gradient pass](https://blog.eleuther.ai/mutransfer/#backward-gradient-pass-at-initialization)
+
+## Encoder bias (`b_enc`) & `threshold`
+
+Similar to $W_\text{dec}$, these parameters are directly connected to $d_\text{sae}$, we need to consider scaling.
+
+## Decoder Bias (`b_dec`)
+
+Connects directly to $d_{\text{model}}$, no scaling is required.
+
+## Scaling Rules Summary
+
+$$
+m_d = \text{expansion_factor}\ /\ \text{expansion_factor}_\text{base}
+$$
+
+| Parameter                          | Initialization Variance                                 | Learning Rate            |
+| -----------------------------------| --------------------------------------------------------| -------------------------|
+| Encoder Weights ($W_{\text{enc}}$) | $\sigma^2_\text{base} / m_d$                            | $\eta_\text{base} / m_d$ |
+| Decoder Weights ($W_{\text{dec}}$) | $\sigma^2_\text{base} / m_d$                            | $\eta_\text{base} / m_d$ |
+| Encoder Bias ($b_{\text{enc}}$)    | $\sigma^2_\text{base} / m_d$                            | $\eta_\text{base} / m_d$ |
+| threshold                          | $\sigma^2_\text{base} / m_d$                            | $\eta_\text{base} / m_d$ |
+| Decoder Bias ($b_{\text{dec}}$)    | $\sigma^2_{\text{base}}$                                | $\eta_{\text{base}}$     |
+| Output Scaling                     | Multiply output by $\alpha_{\text{output}} = 1 / {m_d}$ | N/A                      |
+
+## Updated SAE with μTransfer Scaling
+
+```python
+import torch
+import torch.nn as nn
+import math
+
+class JumpReLUSAE(nn.Module):
+    def __init__(self, d_model, expansion_factor, sigma_base=0.02, expansion_factor_base=None):
+        super().__init__()
+        self.d_model = d_model
+        self.expansion_factor = expansion_factor
+        self.expansion_factor_base = expansion_factor_base if expansion_factor_base is not None else expansion_factor
+        self.m_d = self.expansion_factor / self.expansion_factor_base  # Width multiplier
+        self.d_sae = int(self.expansion_factor * self.d_model)
+        self.alpha_output = 1 / self.m_d
+
+        # Scale initialization variance inversely with m_d
+        sigma_scaled = sigma_base / math.sqrt(self.m_d)
+
+        # Initialize parameters
+        self.W_enc = nn.Parameter(torch.randn(d_model, self.d_sae) * sigma_scaled)
+        self.W_dec = nn.Parameter(torch.randn(self.d_sae, d_model) * sigma_scaled)
+        self.threshold = nn.Parameter(torch.randn(self.d_sae) * sigma_scaled)
+        self.b_enc = nn.Parameter(torch.randn(self.d_sae) * sigma_scaled)
+        self.b_dec = nn.Parameter(torch.randn(d_model) * sigma_base)
+
+    def encode(self, input_acts):
+        pre_acts = input_acts @ self.W_enc + self.b_enc
+        mask = (pre_acts > self.threshold)
+        acts = mask * torch.relu(pre_acts)
+        return acts
+
+    def decode(self, acts):
+        recon = acts @ self.W_dec + self.b_dec
+        recon = recon * self.alpha_output  # Apply output scaling
+        return recon
+
+    def forward(self, input_acts):
+        acts = self.encode(input_acts)
+        recon = self.decode(acts)
+        return recon
+
+d_model = 768  # GPT-2
+expansion_factor_base = 16
+expansion_factor = 32
+sigma_base = 0.02
+lr_base = 1e-3
+
+sae = JumpReLUSAE(d_model, expansion_factor, sigma_base, expansion_factor_base)
+
+scaled_params = [sae.W_enc, sae.W_dec, sae.b_enc, sae.threshold]
+fixed_params = [sae.b_dec]
+
+optimizer = torch.optim.AdamW([
+    {'params': scaled_params, 'lr': lr_base / sae.m_d},
+    {'params': fixed_params, 'lr': lr_base}
+])
+```
+
+## References
+
+- [Tensor Programs V: Tuning Large Neural Networks via Zero-Shot Hyperparameter Transfer](https://arxiv.org/abs/2203.03466)
+- [The Practitioner's Guide to the Maximal Update Parameterization](https://blog.eleuther.ai/mutransfer/)
+
+## Appendices
+
+### Appendix 1: Deriving $W_\text{enc}$ backwards pass
+
+The gradient with respect to $W_\text{enc}$:
+
+$$
+\nabla_{W_{\text{enc}}}\mathcal{L} = \text{input_acts}^\top \nabla_{\text{pre_acts}}\mathcal{L}
+$$
+
 
 - $\text{input_acts}^{\top}$ has dimensions $d_\text{model} \times \text{batch_size}$.
 - $\nabla_{\text{pre_acts}}\mathcal{L}$ has dimensions $\text{batch_size} \times d_\text{sae}$.
@@ -243,98 +348,3 @@ Total number of elements in $\nabla_{W_\text{enc}}\mathcal{L}$ is $d_\text{model
 
 - As $d_\text{sae}$ increases, the total number of elements increases proportionally, scaling the magnitude of the gradient.
 
-### Scaling Parameters
-
-That was a lot of math, but to maintain consistent training dynamics, we should scale:
-
-**Learning Rate**: $\eta_{W_\text{enc}} = \eta_\text{base} / m_d$.
-
-- Compensates for increased gradient magnitude.
-
-**Initialization Variance**: $\text{Var}(W_\text{enc}) = \sigma^2_\text{base} / m_d$.
-
-- Counteracts increased variance in gradients.
-
-## Encoder bias (`b_enc`) & `threshold`
-
-Similar to `W_enc`, these parameters connect to the encoder's $\text{pre_act}$, which do not depend on $d_{\text{sae}}$. Therefore no scaling is needed.
-
-## Decoder Bias (`b_dec`)
-
-Connects directly to $d_{\text{model}}$, no scaling needed
-
-## Scaling Rules Summary
-
-| Parameter                          | Initialization Variance                                     | Learning Rate                    |
-| -----------------------------------| ----------------------------------------------------------- | -------------------------------- |
-| Encoder Weights ($W_{\text{enc}}$) | $\sigma^2_{\text{base}}$                                    | $\frac{\eta_{\text{base}}}{m_d}$ |
-| Decoder Weights ($W_{\text{dec}}$) | $\frac{\sigma^2_{\text{base}}}{m_d}$                        | $\frac{\eta_{\text{base}}}{m_d}$ |
-| Encoder Bias ($b_{\text{enc}}$)    | $\sigma^2_{\text{base}}$                                    | $\eta_{\text{base}}$             |
-| threshold                          | $\sigma^2_{\text{base}}$                                    | $\eta_{\text{base}}$             |
-| Decoder Bias ($b_{\text{dec}}$)    | $\sigma^2_{\text{base}}$                                    | $\eta_{\text{base}}$             |
-| Output Scaling                     | Multiply output by $\alpha_{\text{output}} = \frac{1}{m_d}$ | N/A                              |
-
-## Updated SAE with μTransfer Scaling
-
-```python
-import torch
-import torch.nn as nn
-import math
-
-class JumpReLUSAE(nn.Module):
-    def __init__(self, d_model, expansion_factor, sigma_base=0.02, expansion_factor_base=None):
-        super().__init__()
-        self.d_model = d_model
-        self.expansion_factor = expansion_factor
-        self.expansion_factor_base = expansion_factor_base if expansion_factor_base is not None else expansion_factor
-        self.m_d = self.expansion_factor / self.expansion_factor_base  # Width multiplier
-        self.d_sae = int(self.expansion_factor * self.d_model)
-        self.alpha_output = 1 / self.m_d
-
-        sigma_fixed = sigma_base
-        sigma_scaled = sigma_base / math.sqrt(self.m_d)
-
-        # Initialize parameters
-        self.W_enc = nn.Parameter(torch.randn(d_model, self.d_sae) * sigma_fixed)
-        self.W_dec = nn.Parameter(torch.randn(self.d_sae, d_model) * sigma_scaled)
-        self.threshold = nn.Parameter(torch.randn(self.d_sae) * sigma_fixed)
-        self.b_enc = nn.Parameter(torch.randn(self.d_sae) * sigma_fixed)
-        self.b_dec = nn.Parameter(torch.randn(d_model) * sigma_fixed)
-
-    def encode(self, input_acts):
-        pre_acts = input_acts @ self.W_enc + self.b_enc
-        mask = (pre_acts > self.threshold)
-        acts = mask * torch.relu(pre_acts)
-        return acts
-
-    def decode(self, acts):
-        recon = acts @ self.W_dec + self.b_dec
-        recon = recon * self.alpha_output  # Apply output scaling
-        return recon
-
-    def forward(self, input_acts):
-        acts = self.encode(input_acts)
-        recon = self.decode(acts)
-        return recon
-
-d_model = 768  # GPT-2
-expansion_factor_base = 16
-expansion_factor = 32
-sigma_base = 0.02
-lr_base = 1e-3
-
-sae = JumpReLUSAE(d_model, expansion_factor, sigma_base, expansion_factor_base)
-
-scaled_params = [sae.W_dec]
-fixed_params = [sae.W_enc, sae.b_enc, sae.threshold, sae.b_dec]
-
-optimizer = torch.optim.AdamW([
-    {'params': scaled_params, 'lr': lr_base / sae.m_d},
-    {'params': fixed_params, 'lr': lr_base}
-])
-```
-
-## References
-
-- [Tensor Programs V: Tuning Large Neural Networks via Zero-Shot Hyperparameter Transfer](https://arxiv.org/abs/2203.03466)
-- [The Practitioner's Guide to the Maximal Update Parameterization](https://blog.eleuther.ai/mutransfer/)
