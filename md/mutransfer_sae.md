@@ -83,18 +83,19 @@ $$
 
 ### Forward Pass
 
+To maintain consistent training dynamics across different $d_{\text{sae}}$, we need the varience of $\text{recon}$ to remain constant. We follow the derivation similar to [Forward Pass at Initialization](https://blog.eleuther.ai/mutransfer/#forward-pass-at-initialization).
 
-
-To maintain consistent training dynamics across different $d_{\text{sae}}$, we follow the derivation similar to the one in the [Forward Pass at Initialization](https://blog.eleuther.ai/mutransfer/#forward-pass-at-initialization) of the section of the EleutherAI blog post.
-
-- **Goal**: Ensure variance of $\text{recon}$ remains constant.
-- At initialization, $\text{acts}$ and $W_{\text{dec}}$ have 0 mean and are independent.
+At initialization, $\text{acts}$ and $W_{\text{dec}}$ are independent and have zero mean.
 
 $$
 \text{Var}(\text{recon}) = \text{Var}(\text{acts} \times W_{\text{dec}}) = \text{Var}(\text{acts}) \times \text{Var}(W_{\text{dec}}) \times d_{\text{sae}}
 $$
 
-Since $d_{\text{sae}}$ scales with $m_d$ $\quad (d_{\text{sae}} = m_d \times d_{\text{sae, base}})$
+Since $d_{\text{sae}}$ scales with $m_d$:
+
+$$
+d_{\text{sae}} = m_d \times d_{\text{sae, base}}
+$$
 
 $$
 \implies \text{Var}(\text{recon}) = \text{Var}(\text{acts}) \times \text{Var}(W_{\text{dec}}) \times (m_d \times d_{\text{sae, base}})
@@ -104,12 +105,6 @@ To keep $\text{Var}(\text{recon})$ constant across scales, we need to scale $\te
 
 $$
 \text{Var}(W_{\text{dec}}) = \frac{\sigma^2_{\text{base}}}{m_d}
-$$
-
-Substituting in:
-
-$$
-\text{Var}(\text{recon}) = \text{Var}(\text{acts}) \times \left(\frac{\sigma^2_{\text{base}}}{m_d}\right) \times (m_d \times d_{\text{sae, base}})
 $$
 
 $$
@@ -124,37 +119,30 @@ $$
 \nabla_{W_{\text{dec}}}\mathcal{L} = \text{acts}^\top \nabla_{\text{recon}}\mathcal{L}
 $$
 
-Since $\text{acts}$ has dimension $d_\text{sae}$, scaling $d_\text{sae}$ affects the magnitude of the $\nabla_{W_{\text{dec}}}\mathcal{L}$ proportionally. To main consistent updates to $\Delta W_\text{dec}$, we scale the learning rate inversely with $m_d$:
+The magnitude of $\nabla_{W_{\text{dec}}}\mathcal{L}$ scales with $d_\text{sae}$ since $\text{acts}$ has dimension $d_\text{sae}$
+
+To main consistent updates to $\Delta W_\text{dec}$, we scale the learning rate inversely with $m_d$:
 
 $$
 \eta_{W_\text{dec}} = \frac{\eta_\text{base}}{m_d}
 $$
 
-This aligns with the derivations in the [Effect of Weight Update on Activations](https://blog.eleuther.ai/mutransfer/#effect-of-weight-update-on-activations) section.
+This aligns with the derivations in the [Effect of weight update on activations](https://blog.eleuther.ai/mutransfer/#effect-of-weight-update-on-activations).
 
 ### Output Scaling
 
-Even after adjusting initialization variance and learning rate of $W_\text{dec}$, there is an additional factor that can cause variance to increase during training -- [the development of correlations between weights and activations.](https://blog.eleuther.ai/mutransfer/#:~:text=Since%20we%20have,the%20complexity%20here)
+Even with the above adjustments, [correlations between $\text{acts}$ and $W_\text{dec}$ develop during training](https://blog.eleuther.ai/mutransfer/#:~:text=Since%20we%20have,the%20complexity%20here), causing $\text{Var}(\text{recon})$ to grow with $m_d$
 
 1. Only neurons with positive pre-activation inputs become active
 2. During backpropagation, only active neurons contribute to weight updates
 3. Certain neurons consistently activate for specific inputs, reinforcing the weight-activation relationship.
 4. Due to the positive correlation, the variance of $\text{recon}$ increases.
 
-Using the above steps, we can see how reconstruction variance is proportional to $m_d$. With a larger $m_d$, there are more parameters contributing to correlation and increase in variance.
-
 $$
-\text{Var}(\text{recon}) = \text{Var}(\text{acts} \times W_{\text{dec}}) = \text{Var}(\text{acts}) \times \text{Var}(W_{\text{dec}}) \times d_{\text{sae}}
+\text{Var}(\text{recon}) \propto m_d
 $$
 
-$$
-\implies \text{Var}(\text{recon}) \propto m_d
-$$
-
-Therefore $\text{Var}(\text{recon})$ grows as $m_d$ increases, scaling inversely $m_d$ helps control the output variance.
-
-[We need to scale the decoder's output](https://blog.eleuther.ai/mutransfer/#effect-of-weight-update-on-activations:~:text=To%20ensure%20proper%20scales%20of%20activations%2C%20the%20output%20logit%20forward%20pass%20is%20scaled) by $\alpha_\text{output} = 1/m_d$ to counteract the variance increase due to developing correlations.
-
+Therefore we apply a [scaling factor](https://blog.eleuther.ai/mutransfer/#effect-of-weight-update-on-activations:~:%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20text=To%2520ensure%2520proper%2520scales%2520of%2520activations%252C%2520the%2520output%2520logit%2520forward%2520pass%2520is%2520scaled&text=the%20output%20logit%20forward%20pass%20is%20scaled):
 
 $$
 \text{recon} = (\text{acts} \times W_\text{dec} + b_\text{dec}) \times \alpha_\text{output}, \quad \alpha_\text{output} = \frac{1}{m_d}
@@ -186,23 +174,27 @@ $$
 
 ### Backwards Pass
 
+While the forward pass variance remains constant, the backwards pass introduces scaling issues.
+
 The gradient with respect to $W_\text{enc}$:
 
 $$
 \nabla_{W_{\text{enc}}}\mathcal{L} = \text{input_acts}^\top \nabla_{\text{pre_acts}}\mathcal{L}
 $$
 
-Since $\nabla_{\text{pre_acts}}\mathcal{L}$ has dimensions affected by $d_\text{sae}$, the magnitude of $\nabla_{W_{\text{enc}}}\mathcal{L}$ increases with $m_d$. To maintain consistent weight updates, we scale learning rate and initialization variance inversely with $m_d$:
+The gradient $\nabla_{\text{pre_acts}}\mathcal{L}$ has dimensions affected by $d_\text{sae}$, causing the magnitude of $\nabla_{W_{\text{enc}}}\mathcal{L}$ increases with $m_d$.
+
+To maintain consistent weight updates, we scale learning rate and initialization variance inversely with $m_d$:
 
 $$
-\eta_{W_\text{enc}} = \frac{\eta_\text{base}}{m_d},\quad \text{Var}(W_\text{enc}) = \frac{\sigma^2_\text{base}}{m_d}
+\text{Var}(W_\text{enc}) = \frac{\sigma^2_\text{base}}{m_d} \quad \eta_{W_\text{enc}} = \frac{\eta_\text{base}}{m_d}
 $$
 
 You can see more detail of this in Appendix 1 and [ElutherAI's backwards gradient pass](https://blog.eleuther.ai/mutransfer/#backward-gradient-pass-at-initialization)
 
 ## Encoder bias (`b_enc`) & `threshold`
 
-Similar to $W_\text{dec}$, these parameters are directly connected to $d_\text{sae}$, we need to consider scaling.
+$b_\text{enc}$ and $\text{threshold}$ are directly connected to $d_\text{sae}$. Therefore their activations and gradients scale with $m_d$ similar to $W_\text{dec}$
 
 ## Decoder Bias (`b_dec`)
 
