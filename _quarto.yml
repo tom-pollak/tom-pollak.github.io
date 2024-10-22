@@ -14,4 +14,3 @@ format:
     embed-resources: true
     self-contained-math: false
 format-links: false
-# sidebar: false
