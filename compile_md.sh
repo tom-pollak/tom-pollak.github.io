@@ -2,9 +2,13 @@ set -euo pipefail
 echo "*****"
 mkdir -p pages
 
-for file in md/*.md nbs/*.ipynb; do
-  filename=$(basename "$file" | cut -f 1 -d '.')
-  quarto render "$file" --to html --output-dir "./pages/" --output "$filename.html" --no-execute
+for fp in md/*.md nbs/*.ipynb; do
+  filename=$(basename "$fp" | cut -f 1 -d '.')
+  quarto render "$fp" --to html --output-dir "./pages/" --no-execute
+
+  
+
+  mv "./pages/$(echo "$fp" | cut -f 1 -d '.').html" "./pages/$filename.html"
   echo "processed $filename"
 done
 
