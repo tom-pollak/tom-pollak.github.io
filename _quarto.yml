@@ -9,3 +9,4 @@ format:
   revealjs:
     html-math-method: mathjax
 body-footer: TEST STSTSTEWTWATFD
+format-links: false
