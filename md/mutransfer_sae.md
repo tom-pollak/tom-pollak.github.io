@@ -31,17 +31,17 @@ class JumpReLUSAE(nn.Module):
         self.b_enc = nn.Parameter(torch.randn(self.d_sae) * sigma)
         self.b_dec = nn.Parameter(torch.randn(d_model) * sigma)
 
-    def encode(self, input\_acts):
-        pre\_acts = input\_acts @ self.W_enc + self.b_enc
-        mask = (pre\_acts > self.threshold)
-        acts = mask * torch.relu(pre\_acts)
+    def encode(self, input_acts):
+        pre_acts = input_acts @ self.W_enc + self.b_enc
+        mask = (pre_acts > self.threshold)
+        acts = mask * torch.relu(pre_acts)
         return acts
 
     def decode(self, acts):
         return acts @ self.W_dec + self.b_dec
 
-    def forward(self, input\_acts):
-        acts = self.encode(input\_acts)
+    def forward(self, input_acts):
+        acts = self.encode(input_acts)
         recon = self.decode(acts)
         return recon
 ```
@@ -242,10 +242,10 @@ class JumpReLUSAE(nn.Module):
         self.b_enc = nn.Parameter(torch.randn(self.d_sae) * sigma_scaled)
         self.b_dec = nn.Parameter(torch.randn(d_model) * sigma_base)
 
-    def encode(self, input\_acts):
-        pre\_acts = input\_acts @ self.W_enc + self.b_enc
-        mask = (pre\_acts > self.threshold)
-        acts = mask * torch.relu(pre\_acts)
+    def encode(self, input_acts):
+        pre_acts = input_acts @ self.W_enc + self.b_enc
+        mask = (pre_acts > self.threshold)
+        acts = mask * torch.relu(pre_acts)
         return acts
 
     def decode(self, acts):
@@ -253,8 +253,8 @@ class JumpReLUSAE(nn.Module):
         recon = recon * self.alpha_output  # Apply output scaling
         return recon
 
-    def forward(self, input\_acts):
-        acts = self.encode(input\_acts)
+    def forward(self, input_acts):
+        acts = self.encode(input_acts)
         recon = self.decode(acts)
         return recon
 
