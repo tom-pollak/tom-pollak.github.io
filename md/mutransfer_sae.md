@@ -11,7 +11,7 @@ This work is heavily based on [The Practitioner's Guide to the Maximal Update Pa
 - **Stable Training**: Prevents issues like exploding activations / gradients.
 - **Stable Hyperparameters**: No need to sweep learning rates, however this method doesn't solve regularization parameters.
 
-> **TL;DR**: Jump to [Scaling Rules](https://tom-pollak.github.io/pages/mutransfer_sae.html#:~:text=Scaling%20Rules%20Summary) to find how to scale initialization & learning rates.
+> **TL;DR**: Jump to [Scaling Rules](https://tom-pollak.github.io/pages/mutransfer_sae.html#scaling-rules-summary) to find how to scale initialization & learning rates.
 
 ## Original SAE
 
