@@ -27,7 +27,7 @@ jobs:
 
       - name: Convert Markdown to HTML
         run: |
-          sudo apt-get install pandoc -y
+          sudo apt-get install quarto -y
           ./compile_md.sh
       - name: Setup Pages
         uses: actions/configure-pages@v5

@@ -31,17 +31,17 @@ class JumpReLUSAE(nn.Module):
         self.b_enc = nn.Parameter(torch.randn(self.d_sae) * sigma)
         self.b_dec = nn.Parameter(torch.randn(d_model) * sigma)
 
-    def encode(self, input_acts):
-        pre_acts = input_acts @ self.W_enc + self.b_enc
-        mask = (pre_acts > self.threshold)
-        acts = mask * torch.relu(pre_acts)
+    def encode(self, input\_acts):
+        pre\_acts = input\_acts @ self.W_enc + self.b_enc
+        mask = (pre\_acts > self.threshold)
+        acts = mask * torch.relu(pre\_acts)
         return acts
 
     def decode(self, acts):
         return acts @ self.W_dec + self.b_dec
 
-    def forward(self, input_acts):
-        acts = self.encode(input_acts)
+    def forward(self, input\_acts):
+        acts = self.encode(input\_acts)
         recon = self.decode(acts)
         return recon
 ```
@@ -56,11 +56,11 @@ Our goal is to scale up the `expansion_factor`, (and therefore `d_sae`) and appl
 ### Definitions
 
 - Input and Output Dimension (Fixed): $d_{\text{model}}$
-- Expansion Factor: $\text{expansion_factor}$
-- Hidden Dimension: $d_{\text{sae}} = \text{expansion_factor} \times d_{\text{model}}$
+- Expansion Factor: $\text{expansion\_factor}$
+- Hidden Dimension: $d_{\text{sae}} = \text{expansion\_factor} \times d_{\text{model}}$
 - Base Initialization Variance: $\sigma_{\text{base}}^2$
 - Base Learning Rate: $\eta_{\text{base}}$
-- **Width Multiplier**: $m_d = \text{expansion_factor}\ /\ \text{expansion_factor}_{\text{base}}$
+- **Width Multiplier**: $m_d = \text{expansion\_factor}\ /\ \text{expansion\_factor}_{\text{base}}$
 
 ### Scaling Principles
 
@@ -157,19 +157,19 @@ Dimensions: $d_{\text{model}} \times d_{\text{sae}}$
 Encoder computes pre-activations:
 
 $$
-\text{pre_acts} = \text{input_acts} \times W_\text{enc} + b_\text{enc}
+\text{pre\_acts} = \text{input\_acts} \times W_\text{enc} + b_\text{enc}
 $$
 
 Breaking down the matrix multiply:
 
 $$
-\text{pre_acts}_i = \sum\limits^{d_\text{model}}_{k = 1}{\text{input_acts}_k \times W_{\text{enc}, k, i} + b_{\text{enc}, i}}
+\text{pre\_acts}_i = \sum\limits^{d_\text{model}}_{k = 1}{\text{input\_acts}_k \times W_{\text{enc}, k, i} + b_{\text{enc}, i}}
 $$
 
-A.k.a each $\text{pre_acts}$ is a sum over $d_\text{model}$ terms. Since $d_\text{model}$ is fixed, scaling $d_\text{sae}$ does _not_ affect the variance of $\text{pre_acts}$
+A.k.a each $\text{pre\_acts}$ is a sum over $d_\text{model}$ terms. Since $d_\text{model}$ is fixed, scaling $d_\text{sae}$ does _not_ affect the variance of $\text{pre\_acts}$
 
 $$
-\text{Var}(\text{pre_acts}) = \text{Var}(\text{input_acts}) \times \text{Var}(W_{\text{enc}}) \times d_{\text{model}}
+\text{Var}(\text{pre\_acts}) = \text{Var}(\text{input\_acts}) \times \text{Var}(W_{\text{enc}}) \times d_{\text{model}}
 $$
 
 ### Backwards Pass
@@ -179,10 +179,10 @@ While the forward pass variance remains constant, the backwards pass introduces 
 The gradient with respect to $W_\text{enc}$:
 
 $$
-\nabla_{W_{\text{enc}}}\mathcal{L} = \text{input_acts}^\top \nabla_{\text{pre_acts}}\mathcal{L}
+\nabla_{W_{\text{enc}}}\mathcal{L} = \text{input\_acts}^\top \nabla_{\text{pre\_acts}}\mathcal{L}
 $$
 
-The gradient $\nabla_{\text{pre_acts}}\mathcal{L}$ has dimensions affected by $d_\text{sae}$, causing the magnitude of $\nabla_{W_{\text{enc}}}\mathcal{L}$ increases with $m_d$.
+The gradient $\nabla_{\text{pre\_acts}}\mathcal{L}$ has dimensions affected by $d_\text{sae}$, causing the magnitude of $\nabla_{W_{\text{enc}}}\mathcal{L}$ increases with $m_d$.
 
 To maintain consistent weight updates, we scale learning rate and initialization variance inversely with $m_d$:
 
@@ -203,7 +203,7 @@ Connects directly to $d_{\text{model}}$, no scaling is required.
 ## Scaling Rules Summary
 
 $$
-m_d = \text{expansion_factor}\ /\ \text{expansion_factor}_\text{base}
+m_d = \text{expansion\_factor}\ /\ \text{expansion\_factor}_\text{base}
 $$
 
 | Parameter                          | Initialization Variance                                 | Learning Rate            |
@@ -242,10 +242,10 @@ class JumpReLUSAE(nn.Module):
         self.b_enc = nn.Parameter(torch.randn(self.d_sae) * sigma_scaled)
         self.b_dec = nn.Parameter(torch.randn(d_model) * sigma_base)
 
-    def encode(self, input_acts):
-        pre_acts = input_acts @ self.W_enc + self.b_enc
-        mask = (pre_acts > self.threshold)
-        acts = mask * torch.relu(pre_acts)
+    def encode(self, input\_acts):
+        pre\_acts = input\_acts @ self.W_enc + self.b_enc
+        mask = (pre\_acts > self.threshold)
+        acts = mask * torch.relu(pre\_acts)
         return acts
 
     def decode(self, acts):
@@ -253,8 +253,8 @@ class JumpReLUSAE(nn.Module):
         recon = recon * self.alpha_output  # Apply output scaling
         return recon
 
-    def forward(self, input_acts):
-        acts = self.encode(input_acts)
+    def forward(self, input\_acts):
+        acts = self.encode(input\_acts)
         recon = self.decode(acts)
         return recon
 
@@ -287,27 +287,27 @@ optimizer = torch.optim.AdamW([
 The gradient with respect to $W_\text{enc}$:
 
 $$
-\nabla_{W_{\text{enc}}}\mathcal{L} = \text{input_acts}^\top \nabla_{\text{pre_acts}}\mathcal{L}
+\nabla_{W_{\text{enc}}}\mathcal{L} = \text{input\_acts}^\top \nabla_{\text{pre\_acts}}\mathcal{L}
 $$
 
 
-- $\text{input_acts}^{\top}$ has dimensions $d_\text{model} \times \text{batch_size}$.
-- $\nabla_{\text{pre_acts}}\mathcal{L}$ has dimensions $\text{batch_size} \times d_\text{sae}$.
+- $\text{input\_acts}^{\top}$ has dimensions $d_\text{model} \times \text{batch\_size}$.
+- $\nabla_{\text{pre\_acts}}\mathcal{L}$ has dimensions $\text{batch\_size} \times d_\text{sae}$.
 - $\implies \nabla_{W_\text{enc}}\mathcal{L}$ has dimensions $d_\text{model} \times d_\text{sae}$.
 
-Gradient w.r.t $\text{pre_acts}$:
+Gradient w.r.t $\text{pre\_acts}$:
 
 $$
-\nabla_{\text{pre_acts}}\mathcal{L} = \nabla_{\text{acts}}\mathcal{L} \odot \nabla_{\text{pre_acts}}\text{acts}
+\nabla_{\text{pre\_acts}}\mathcal{L} = \nabla_{\text{acts}}\mathcal{L} \odot \nabla_{\text{pre\_acts}}\text{acts}
 $$
 
-- $\nabla_{\text{pre_acts}}\text{acts}$ is a binary mask of active neurons.
+- $\nabla_{\text{pre\_acts}}\text{acts}$ is a binary mask of active neurons.
 
 
-Variance of $\nabla_{\text{pre_acts}}\mathcal{L}$:
+Variance of $\nabla_{\text{pre\_acts}}\mathcal{L}$:
 
 $$
-\text{Var}(\nabla_{\text{pre_acts}}\mathcal{L}) = \text{Var}(\nabla_{\text{acts}}\mathcal{L}) \times p_\text{active}
+\text{Var}(\nabla_{\text{pre\_acts}}\mathcal{L}) = \text{Var}(\nabla_{\text{acts}}\mathcal{L}) \times p_\text{active}
 $$
 
 - $p_\text{active}$ is the probability that a neuron is active (approximately constant).
@@ -320,19 +320,19 @@ $$
 
 - $W_\text{dec}^{\top}$ has dimensions $d_\text{model} \times d_\text{sae}$.
 
-- As $d_\text{sae}$ increases, $W_\text{dec}$ becomes larger, affecting the variance of $\nabla_{\text{acts}}\mathcal{L}$ and consequently $\nabla_{\text{pre_acts}}\mathcal{L}$.
+- As $d_\text{sae}$ increases, $W_\text{dec}$ becomes larger, affecting the variance of $\nabla_{\text{acts}}\mathcal{L}$ and consequently $\nabla_{\text{pre\_acts}}\mathcal{L}$.
 
 #### Variance of Each Element in $\nabla_{W_\text{enc}}\mathcal{L}$
 
 - Each element of $\nabla_{W_\text{enc}}\mathcal{L}$ is computed as:
 
 $$
-[\nabla_{W_\text{enc}}\mathcal{L}]_{ij} = \sum_{n=1}^{\text{batch_size}} \text{input_acts}_{ni} \times [\nabla_{\text{pre_acts}}\mathcal{L}]_{nj}
+[\nabla_{W_\text{enc}}\mathcal{L}]_{ij} = \sum_{n=1}^{\text{batch\_size}} \text{input\_acts}_{ni} \times [\nabla_{\text{pre\_acts}}\mathcal{L}]_{nj}
 $$
 
-- The variance of each element depends on $\text{Var}(\text{input_acts})$ and $\text{Var}(\nabla_{\text{pre_acts}}\mathcal{L})$.
+- The variance of each element depends on $\text{Var}(\text{input\_acts})$ and $\text{Var}(\nabla_{\text{pre\_acts}}\mathcal{L})$.
 
-- Since $\text{Var}(\nabla_{\text{pre_acts}}\mathcal{L})$ increases with $d_\text{sae}$ (due to $W_\text{dec}$), the variance of each element in $\nabla_{W_\text{enc}}\mathcal{L}$ also increases with $d_\text{sae}$.
+- Since $\text{Var}(\nabla_{\text{pre\_acts}}\mathcal{L})$ increases with $d_\text{sae}$ (due to $W_\text{dec}$), the variance of each element in $\nabla_{W_\text{enc}}\mathcal{L}$ also increases with $d_\text{sae}$.
 
 #### Scaling Total Number of Elements
 
