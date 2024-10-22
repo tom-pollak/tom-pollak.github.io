@@ -1,5 +1,13 @@
 website:
   site-url: https://tom-pollak.github.io/
+  page-footer:
+    center:
+      - text "Home"
+        href: https://tom-pollak.github.io/
+      - icon: github
+        href: https://github.com/tom-pollak/
+        aria-label: GitHub
+
 output-dir: pages
 theme: [darkly, black.scss]
 format:
@@ -8,5 +16,4 @@ format:
     self-contained-math: false
   revealjs:
     html-math-method: mathjax
-body-footer: TEST STSTSTEWTWATFD
 format-links: false
