@@ -1,6 +1,7 @@
 website:
   site-url: https://tom-pollak.github.io/
   page-footer:
+    background: dark
     center:
       - text: "Home"
         href: https://tom-pollak.github.io/
@@ -13,4 +14,6 @@ format:
   html:
     embed-resources: true
     self-contained-math: false
+    # highlight-style:
+    #   dark: highlight-dark.theme
 format-links: false
