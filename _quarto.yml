@@ -9,7 +9,7 @@ website:
         href: https://github.com/tom-pollak/
         aria-label: GitHub
 output-dir: pages
-theme: [darkly, black.scss]
+theme: [darkly, styles.scss]
 format:
   html:
     embed-resources: true

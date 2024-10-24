@@ -1,0 +1,19 @@
+
+/*-- scss:defaults --*/
+
+$body-bg: #000;
+
+$code-block-border-left: #5c5c5c;
+
+.cell-output {
+  border: 1px solid #6c757d; // Light gray border
+  border-radius: 4px;         // Rounded corners
+  padding: 0.5em;            // Add some inner spacing
+  margin-top: 0.5em;         // Add space between code and output
+}
+
+// If you want to style pre blocks within outputs specifically
+.cell-output pre {
+  margin-bottom: 0;          // Remove bottom margin from pre
+  background-color: transparent;  // Optional: make background transparent
+}
