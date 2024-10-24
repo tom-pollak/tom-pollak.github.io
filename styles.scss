@@ -5,15 +5,14 @@ $body-bg: #000;
 
 $code-block-border-left: #5c5c5c;
 
-.cell-output {
-  border: 1px solid #6c757d; // Light gray border
-  border-radius: 4px;         // Rounded corners
-  padding: 0.5em;            // Add some inner spacing
-  margin-top: 0.5em;         // Add space between code and output
-}
+/*-- scss:rules --*/
 
-// If you want to style pre blocks within outputs specifically
 .cell-output pre {
-  margin-bottom: 0;          // Remove bottom margin from pre
-  background-color: transparent;  // Optional: make background transparent
+  background: #282828;
+  border: 1px solid #444;
+  border-radius: 0 0 4px 4px;  // Round bottom corners only
+  margin-top: -2px;  // Negative margin to connect with code cell
+  font-family: var(--bs-font-monospace);
+  padding: 0.5em 0.5em;
+  color: #fff;
 }
