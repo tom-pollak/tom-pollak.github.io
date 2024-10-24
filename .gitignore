@@ -2,3 +2,5 @@
 pages/**
 nbs/.ipynb_checkpoints/
 .quarto/
+
+/.quarto/
