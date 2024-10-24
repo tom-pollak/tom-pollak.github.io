@@ -1,18 +1,19 @@
+project:
+  type: website
+  
 website:
   site-url: https://tom-pollak.github.io/
   page-footer:
-    background: dark
     center:
       - text: "Home"
         href: https://tom-pollak.github.io/
       - icon: github
         href: https://github.com/tom-pollak/
         aria-label: GitHub
-output-dir: pages
+    
 theme: [darkly, styles.scss]
 format:
   html:
     embed-resources: true
     self-contained-math: false
     highlight-style: gruvbox-dark
-format-links: false
