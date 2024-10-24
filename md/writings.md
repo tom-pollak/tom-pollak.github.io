@@ -1,5 +1,6 @@
 # Posts
 
+- [Left vs Right Padding](./left_vs_right_padding.html) _24 October 2024_
 - [Build a ViT From Scratch](https://colab.research.google.com/github/tom-pollak/nanoViT/blob/main/tutorials/vit_from_scratch.ipynb) _19 October 2024_
 - [Applying μTransfer to Scale Sparse Autoencoders](./mutransfer_sae.html) _26 September 2024_
 - [Interpreting Culture](https://docs.google.com/document/d/1km2m3oWZMDrekV9_mYHft5pX9PjrM4imKGEdK9vVMr8/edit?usp=sharing) _1 September 2024_
