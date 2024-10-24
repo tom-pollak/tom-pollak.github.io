@@ -4,10 +4,31 @@ $body-bg: #000;
 $code-block-border-left: #5c5c5c;
 $code-bg: #282828;
 $code-color: #fff;
+$body-color: rgba(255, 255, 255, 0.9);
+
 
 /*-- scss:rules --*/
 
-// Style all code blocks consistently
+blockquote, .blockquote {
+  background: $code-bg;
+  border-left: 4px solid #75AADB;  // A bright blue border
+  margin: 1em 0;
+  padding: 1em;
+  border-radius: 4px;
+  
+  p {
+    color: $body-color;
+    margin-bottom: 0;
+  }
+}
+
+strong, b {
+  font-weight: 800;  // Increased from default 700
+  color: #fff;       // Make it white for more contrast
+  letter-spacing: 0.01em;  // Slightly increase letter spacing
+}
+
+
 pre {
   background: $code-bg !important;
 }
@@ -22,3 +43,4 @@ pre {
 pre:not(.sourceCode) {
  padding: 0.5em;
 }
+
