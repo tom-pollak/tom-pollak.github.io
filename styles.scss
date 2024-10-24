@@ -45,8 +45,10 @@ pre:not(.sourceCode) {
 }
 
 .footer {
-  margin-top: -3rem;      // Negative margin to pull it up
-  padding-top: 0.25rem;   // Keep some padding for the border
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  padding-top: 0.25rem;
   border-top: 1px solid #444;
   
   a, .nav-link {
