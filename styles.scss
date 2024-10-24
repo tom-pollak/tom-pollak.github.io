@@ -45,11 +45,15 @@ pre:not(.sourceCode) {
 }
 
 .footer {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  padding-top: 0.25rem;
+  padding-top: 0.25rem;   
   border-top: 1px solid #444;
+  background: #000;
+  
+  @media (min-width: 768px) {  // Only apply fixed positioning on desktop
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+  }
   
   a, .nav-link {
     color: $body-color;
