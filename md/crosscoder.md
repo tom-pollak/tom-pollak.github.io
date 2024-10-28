@@ -111,3 +111,35 @@ Find new features in the MLP output.
 
 Different from a transcoder, reconstruct both MLP _input_ & output
 
+- Identifies features shared in pre and post MLP space, and features specific to one or the other.
+- Because encoder vectors are only in the pre-MLP space, we can analyze how these newly computed features where made
+
+How to find inputs to newly constructed features
+
+1. Dot product of feature encoder vector with feature decoded vector, weighted by source feature activation.
+
+Example:
+
+Post-MLP feature fires on uniqueness: "special" "particular" "exceptional"
+Pre-MLP inputs fire for particular words in particular contexts.
+
+##### How are "stable" features (no decay) embedded in pre and post MLP space?
+
+Postive correlation on average, aka similar directions, but high variance.
+- May explain why feature directions drift across layers -- MLP relay features without non-linear xfm (perhaps so other features can read from different spaces?) aka the particular words in context are written written to different subspaces for different later features to read.
+
+## Model Diffing
+
+> Cross Model features!
+
+Previous work:
+- [Universal neurons](https://distill.pub/2020/circuits/zoom-in): edge detectors, high low frequency detections in vision models
+
+Analogous circuits?
+
+Model diffing: finetuned models -- finding what has changed from previous model. Could be interesting for my [LoRA](https://github.com/tom-pollak/interp-lora-causal-circuits) work?
+
+- **Feature Set Comparison:** Universal features vs unique to specific model
+- **Circuit Comparison:** Even for universal features, downstream effects may be different. Compare circuits they participate in.
+- **Differences in Feature Geometry:** Compare cosine similarity across models. If variants of the same model, we can find the absolute difference aswell (aka drift)
+
