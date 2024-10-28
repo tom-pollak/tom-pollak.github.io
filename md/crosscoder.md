@@ -83,6 +83,7 @@ Wide variety: some features definitely rotate _while maintaining magnitude_
 
 **Decay:** Magnitude Peaks in a certain layer, and trails off.
 
+
 ##### Rotation
 
 No rotation and no decay: Entirely active square.
@@ -103,5 +104,10 @@ Preliminary research: crosscoder features that peak in a particular layer are qu
 
 ### Pre/Post MLP Crosscoders
 
+Find new features in the MLP output.
 
+1. Train a crosscoder on the pre-MLP stream and outputs that the MLP writes back to the residual stream.
+2. Read only encoding of pre-MLP, but reconstruct both pre-MLP and MLP output.
+
+Different from a transcoder, reconstruct both MLP _input_ & output
 
