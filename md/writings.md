@@ -1,5 +1,6 @@
 # Posts
 
+- [Interpreting a Trigram Model -- A Worklog](./trigram_worklog.html) _12 November 2024_
 - [Notes on Crosscoders](./crosscoder.html) _28 October 2024_
 - [Left vs Right Padding](./left_vs_right_padding.html) _24 October 2024_
 - [Build a ViT From Scratch](https://colab.research.google.com/github/tom-pollak/nanoViT/blob/main/tutorials/vit_from_scratch.ipynb) _19 October 2024_
