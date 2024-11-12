@@ -86,7 +86,7 @@ prev_attn = pattern[:, x, y][:, 1:-1] # cut bos and eos token as special cases.
 line(prev_attn[0], title="Y token attention to X token")
 ```
 
-![Y token attention to X token](../assets/trigram_worklog/line_y_attn_x.png)
+![Y token attention to X token](../assets/trigram_worklog/bar_y_attn_x.png)
 
 This snippet gets the previous attention score of the previous token. I cut the first token because it does not have a previous token so always may only attend to itself, and will never qualify for a `Y` token.
 
