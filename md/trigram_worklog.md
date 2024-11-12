@@ -46,7 +46,7 @@ Why do we need a MLP layer at all? can't this problem be solved with a single at
 
 To test this, modified trained a model with no MLP layer, and . It seems to perform well:
 
-(these were both trained with `d_head = 24` because I forgot to change it)
+#### Attn only
 
 ```
 metrics/train_loss	4.17597
@@ -56,7 +56,7 @@ metrics/trigram_frac_correct	0.90614
 metrics/trigram_n_correct	251
 ```
 
-Compared to the original attn & MLP:
+#### (Original) Attn & MLP
 
 ```
 metrics/train_loss	4.15741
@@ -66,9 +66,11 @@ metrics/trigram_frac_correct	0.9639
 metrics/trigram_n_correct	267
 ```
 
+#### 
+
 There doesn't seem to be a meaningful difference between the performance of the models, especially considering that the attn & mlp model has significantly more parameters.
 
-Don't get me wrong, the extra MLP may be doing work, maybe recovering the attn projection from superposition, but I'm happy to see that it does not appear to be funamental to the circuit.
+It seems to be that it's not required for the circuit. The question now for the MLP now is, what work is it doing? Perhaps recovering attn projection from superposition so it can pack more trigrams in an attn head?
 
 ## Attention Graphs
 
@@ -129,4 +131,45 @@ Now lets find the QK circuit that causes Y to attend highly to X.
 
 ## Finding QK
 
+So my current hypothesis is that the QK circuit is soley responsible for identifying the current token Y as a trigram.
+
+So the question is how? we basically have the form
+
+```python
+# Embedding
+resid = W_E[toks] + W_P
+resid = norm(resid) * scale + bias # layer norm
+
+# Attn
+q = Q(resid)
+k = K(resid)
+
+scores = causal_mask(q @ k * d_scale)
+pattern = softmax(scores)
+```
+
+So for now can we ignore the layer norm, not entirely sure how to deal with that. There's some tutorials on it but I think it can factored out by folding into the QK matrices and stuff.
+
+### Hypothesis
+
+> Don't jump to conclusions!
+
+It seems to me that since there is a fixed set of trigrams, the Q and K vectors can be specialized for the `W_E` and `W_P`. I think something like:
+
+`Q( W_E(Y) ) @ K( W_E(X) )` => high similarity if a learned trigram
+
+This would not be sufficient by itself, 
+
+
+`Q( W_P(Y) ) @ K( W_P(Y) )` =>  
+
+`Q(W_P) @ K(W_P)`
+
+ the `W_E` matrix may put X and Y trigram tokens nearish in embedding space, and 
+
+the `K(W_P)` from the X token maps to the Y token or vice versa, `Q(W_P)` of the X token maps to the Y token W_E.
+
+Or could it be the other way? W_P is the base and `Q(W_E) @ K(W_E)` maps to a shared space? no I don't think so because we would have to do a xfm because the base W_P is different.
+
+I don't _think_ the base could be W_P and the W_E maps the token, because the 
 
