@@ -1,5 +1,6 @@
 # Posts
 
+- [Writing Shaders with WebGPU](./shaders_wgsl.html) _2 January 2025_
 - [Blender Copilot](./blender_copilot.html) _20 December 2024_
 - [Building an Automated Horse Trading System](./each_way_matcher.html) _3 December 2024_
 - [Interpreting a Trigram Model -- A Worklog](./trigram_worklog.html) _12 November 2024_
