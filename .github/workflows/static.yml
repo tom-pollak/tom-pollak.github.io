@@ -33,7 +33,7 @@ jobs:
       - name: Install Python packages
         run: |
           python -m pip install --upgrade pip
-          pip install jupyter
+          pip install jupyter ipykernel
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
