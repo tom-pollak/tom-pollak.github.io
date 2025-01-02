@@ -14,8 +14,6 @@ website:
 theme: [darkly, styles.scss]
 format:
   html:
-    mainfont: SFMono-Regular
-    fontsize: 0.9em
     embed-resources: true
     self-contained-math: false
     highlight-style: gruvbox-dark
