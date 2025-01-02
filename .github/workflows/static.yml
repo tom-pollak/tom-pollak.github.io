@@ -29,6 +29,7 @@ jobs:
         run: |
           sudo apt-get update -y -qq
           sudo apt install -y \
+            font-sf-mono \
             libegl1-mesa \
             libgl1-mesa-dri \
             libxcb-xfixes0-dev \
