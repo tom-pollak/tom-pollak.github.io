@@ -1,11 +1,12 @@
-# Building an Automated Horse Trading System -- Each Way Matcher
+# Building an Automated Horse Trading System
 
-> https://github.com/tom-pollak/each-way-matcher
 > This is quite an old project, but I just got around to publishing all the old notes I had on it
+>
+> [https://github.com/tom-pollak/each-way-matcher](https://github.com/tom-pollak/each-way-matcher)
 
 During Covid, I did a lot of match betting, which involves exploiting bookmakers "free bet" offers to attract gamblers. After profiting from most of the easy offers, I started looking into new strategies and discovered an edge with two strategies in a type of hose racing bet called each-way.
 
-> Each-way: Your bet is split in two -- half the stake goes to the horse winning, half goes towards the horse "placing" (coming 2nd or 3rd). The kicker: place payout is calculated by `win_odds / 5`.
+> **Each-way:** Your bet is split in two -- half the stake goes to the horse winning, half goes towards the horse "placing" (coming 2nd or 3rd). The kicker: place payout is calculated by `win_odds / 5`.
 
 This isn't independant, so if a race has a huge favourite to win (e.g. 1.05 odds), then all other horses will be given high win odds, but at least *some* horses must come 2nd or 3rd. These horses may have underated place value relative to their high win odds. Three tasks:
 
