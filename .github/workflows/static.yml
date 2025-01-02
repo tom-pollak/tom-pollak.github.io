@@ -33,7 +33,7 @@ jobs:
       - name: Install Python packages
         run: |
           python -m pip install --upgrade pip
-          pip install jupyter ipykernel
+          pip install jupyter ipykernel matplotlib jupyter-rfb wgpu-shadertoy
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
