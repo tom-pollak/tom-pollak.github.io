@@ -160,16 +160,16 @@ It seems to me that since there is a fixed set of trigrams, the Q and K vectors 
 
 This would not be sufficient by itself, 
 
+`Q( W_P(Y) ) @ K( W_P(X) )` => high similarity if X and Y are next to each other
 
-`Q( W_P(Y) ) @ K( W_P(Y) )` =>  
 
 `Q(W_P) @ K(W_P)`
 
  the `W_E` matrix may put X and Y trigram tokens nearish in embedding space, and 
 
-the `K(W_P)` from the X token maps to the Y token or vice versa, `Q(W_P)` of the X token maps to the Y token W_E.
+the `K(W_P)` from the X token maps to the Y token or vice versa, `Q(W_P)` of the X token maps to the Y token `W_E`.
 
-Or could it be the other way? W_P is the base and `Q(W_E) @ K(W_E)` maps to a shared space? no I don't think so because we would have to do a xfm because the base W_P is different.
+Or could it be the other way? `W_P` is the base and `Q(W_E) @ K(W_E)` maps to a shared space? no I don't think so because we would have to do a xfm because the base `W_P` is different.
 
-I don't _think_ the base could be W_P and the W_E maps the token, because the 
+I don't _think_ the base could be `W_P` and the W_E maps the token, because the 
 

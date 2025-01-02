@@ -1,5 +1,6 @@
 # Posts
 
+- [Building an Automated Horse Trading System -- Each Way Matcher](./each_way_matcher.html) _2 January 2025_
 - [Interpreting a Trigram Model -- A Worklog](./trigram_worklog.html) _12 November 2024_
 - [Notes on Crosscoders](./crosscoder.html) _28 October 2024_
 - [Left vs Right Padding](./left_vs_right_padding.html) _24 October 2024_
