@@ -9,7 +9,7 @@ During Covid, I did a lot of match betting, which involves exploiting bookmakers
 
 This isn't independant, so if a race has a huge favourite to win (e.g. 1.05 odds), then all other horses will be given high win odds, but at least *some* horses must come 2nd or 3rd. These horses may have underated place value relative to their high win odds. Three tasks:
 
-1. Find undervalued horses by calculating probability of horse finishing in *any arbitary place* based on all horses win odds. (https://gist.github.com/tom-pollak/818f2d1dd21575bc7924bc44feb1d50d)
+1. Find undervalued horses by calculating probability of horse finishing in *any arbitary place* based on all horses win odds. [Github Gist](https://gist.github.com/tom-pollak/818f2d1dd21575bc7924bc44feb1d50d)
 
 2. Use an adapted 3 way Kelly Criterion for optimal bet sizing (win, place, lose) and geometric mean growth rate for ranking bets (I kind of rediscovered in the frustration of Expected Value not taking into account a finite bankroll / risk or ruin).
 
