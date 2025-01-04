@@ -136,18 +136,26 @@ def mk_proba_dist(
     min_p=None,
 ):
     batch_size, d_vocab = logits.shape
+    device = logits.device
     if top_k:
-        logits, idxs = logits.topk(top_k)
+        logits, idxs = logits.topk(top_k, dim=-1)
     else:
-        idxs = torch.arange(d_vocab, device=device)
+        idxs = (
+            torch.arange(d_vocab, device=device)
+            .repeat(batch_size)
+            .reshape(batch_size, d_vocab)
+        )
 
     # TODO: temperature before or after min_p?
     probs = F.softmax(logits / temperature, dim=-1)
 
     if min_p is not None:
-        mask = probs >= (probs.max() * min_p)
-        idxs, probs = idxs[mask], probs[mask]
-
+        max_probs = probs.max(dim=-1, keepdim=True).values
+        threshold = max_probs * min_p
+        mask = probs >= threshold
+        probs = probs * mask
+        probs = probs / probs.sum(dim=-1, keepdim=True) # renormalize
+        idxs = idxs * mask
     return idxs, probs
 
 @delegates(mk_proba_dist)
@@ -163,13 +171,27 @@ def soft_sampling_train_step(
     assert 0 <= guidance_alpha <= 1
     batch_size, seq_len = batch.shape
     device = batch.device
-    cache = None
+
+    # cache
+    past_key_values = None
+    position_ids = torch.zeros(batch_size, 1, dtype=torch.long, device=device)
+
+
     loss = torch.tensor(0., device=device)
-    embeds = W_E[batch[:, :1]]  # BOS
-    tokens = [] if return_tokens else None
+    embeds = W_E[batch[:, :1]]  # BOS shape: (batch_size, 1, d_model)
+    tokens = [ batch[:, :1] ] if return_tokens else None
     for t in range(1, seq_len):
-        logits_t, cache = model(inputs_embeds=embeds, cache=cache)
-        i_t, p_t = mk_proba_dist(logits, **kwargs)
+        outputs = model(
+            inputs_embeds=embeds,
+            past_key_values=past_key_values,
+            position_ids=position_ids,
+            use_cache=True
+        )
+
+        logits_t = outputs.logits[:, -1]
+        past_key_values = outputs.past_key_values
+
+        i_t, p_t = mk_proba_dist(logits_t, **kwargs)
 
         # loss
         loss_t = F.cross_entropy(p_t, batch[:, t])
@@ -177,7 +199,9 @@ def soft_sampling_train_step(
 
         # discrete sample
         if return_tokens:
-            next_token = i_t[torch.multinomial(p_t, 1)]
+            indices = torch.multinomial(p_t, 1) # (batch_size, 1)
+            batch_indices = torch.arange(batch_size)[:, None] # (batch_size, 1)
+            next_token = i_t[batch_indices, indices]
             tokens.append(next_token)
 
         # soft sample
@@ -188,8 +212,11 @@ def soft_sampling_train_step(
             guidance_alpha * next_emb_gt +
             (1 - guidance_alpha) * next_emb_soft
         )
-        embeds.append(next_embed)
+        embeds = torch.cat([embeds, next_embed[:, None, :]], dim=1)
+        position_ids += 1
 
+    if return_tokens:
+        tokens = torch.cat(tokens, dim=1)
     # normalize gradient: sum batch, mean sequence length
     loss /= seq_len
     return loss, tokens
