@@ -164,7 +164,6 @@ def soft_sampling_train_step(
     batch, # tokens of shape (batch_size, seq_len)
     W_E, # model's embedding matrix
     guidance_alpha, # guidance weighting -- 1 equivalent to discrete sampling
-    return_tokens=False, # sample discrete tokens?
     **kwargs, # passed to mk_proba_dist
 ):
     "Single train step using soft sampling"
@@ -179,7 +178,7 @@ def soft_sampling_train_step(
 
     loss = torch.tensor(0., device=device)
     embeds = W_E[batch[:, :1]]  # BOS shape: (batch_size, 1, d_model)
-    tokens = [ batch[:, :1] ] if return_tokens else None
+    tokens = [ batch[:, :1].detach().cpu() ]
     for t in range(1, seq_len):
         outputs = model(
             inputs_embeds=embeds,
@@ -197,12 +196,11 @@ def soft_sampling_train_step(
         loss_t = F.cross_entropy(p_t, batch[:, t])
         loss += loss_t
 
-        # discrete sample
-        if return_tokens:
-            indices = torch.multinomial(p_t, 1) # (batch_size, 1)
-            batch_indices = torch.arange(batch_size)[:, None] # (batch_size, 1)
-            next_token = i_t[batch_indices, indices]
-            tokens.append(next_token)
+        # discrete sample -- for logging
+        indices = torch.multinomial(p_t, 1) # (batch_size, 1)
+        batch_indices = torch.arange(batch_size)[:, None] # (batch_size, 1)
+        next_token = i_t[batch_indices, indices].detach().cpu()
+        tokens.append(next_token)
 
         # soft sample
         next_emb_soft = p_t @ W_E      # soft sampling
