@@ -1,6 +1,6 @@
 # Posts
 
-- [Soft Sampling](./soft_sampling.md) _4 January 2025_
+- [Soft Sampling](./soft_sampling.html) _4 January 2025_
 - [Writing Shaders with WebGPU](./shaders_wgsl.html) _2 January 2025_
 - [Blender Copilot](./blender_copilot.html) _20 December 2024_
 - [Building an Automated Horse Trading System](./each_way_matcher.html) _3 December 2024_
