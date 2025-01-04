@@ -130,7 +130,7 @@ import torch.nn.functional as F
 from fastcore.meta import delegates
 
 def mk_proba_dist(
-    logits_t, # (batch_size, d_vocab)
+    logits, # (batch_size, d_vocab)
     temperature=1.0,
     top_k=None,
     min_p=None,
