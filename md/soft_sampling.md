@@ -234,13 +234,13 @@ If the soft decoding works, we effectively combine multiple tokens into a single
 
 ### 6.3 Interpretability
 
-If each step is a distribution, you can record the top tokens from that distribution to see how the model’s “beliefs” evolve. This can provide an alternative window into the model’s chain of thought, though still not a “true” discrete chain.
+We can record how the model's beliefs evolve by sampling tokens at each step, though it's not a "true" discrete chain.
 
-### 6.4 May want to use soft sampling for thinking tokens only
+### 6.4 Selectively use soft decoding
 
-And discretize the final answer.
+Perhaps only for thinking tokens? And switch back to discrete for the final answer.
 
-### 6.5 Temperature as a learnt parameter
+### 6.5 Temperature / TopK / MinP as a learnable parameter
 
 As the model is fully differentiable, we could use temperature (and perhaps topk, minp as learnable parameters).
 
@@ -256,7 +256,7 @@ _Or_ we could do a beam search, and collapse the embeddings back down into a sof
 
 Specialized prefix of a set of learnable vectors, that signifies the model does soft decoding.
 
-Alternatively put inside a new <think> token or something.
+Alternatively put inside a new `<think>` token or something.
 
 ---
 
