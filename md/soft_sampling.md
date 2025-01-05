@@ -84,7 +84,7 @@ Pretrained LLMs only saw discrete token embeddings during training. A "soft mix"
 
 ### 4.2 Sequential Fine-Tuning
 
-Each output is dependant on all previous outputs, which can be useful for gradient propagation, but is compute inefficient in training. Kind of like RNNs.
+Each output is dependent on all previous outputs, which can be useful for gradient propagation, but is compute inefficient in training. Kind of like RNNs.
 
 ### 4.3 Blurry embeddings / Entropy explosion
 
@@ -100,7 +100,7 @@ Possible solutions:
 
 ### 4.4 Scheduled Sampling
 
-Not obvious exactly how to incorportate the ground truth into the sampling. Discrete decoding handles this simply with "teacher-forcing", replacing the predicted embedding with the correct one.
+Not obvious exactly how to incorporate the ground truth into the sampling. Discrete decoding handles this simply with "teacher-forcing", replacing the predicted embedding with the correct one.
 
 We may need to mix the ground truth with the soft sample to stabilize training.
 
@@ -226,7 +226,7 @@ TODO: how do we want to apply `guidance_alpha`? I think we should clamp the corr
 
 ## 6. Additional Considerations
 
-### 6.1 Comparsion with BEAM
+### 6.1 Comparison with BEAM
 
 Beam Search / Self-Consistency: Another way to keep multiple possibilities is to track multiple discrete beams. However, that can explode combinatorially.
 
