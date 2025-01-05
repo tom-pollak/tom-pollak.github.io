@@ -1,4 +1,6 @@
-# Soft (Latent) Chain-of-Thought Decoding
+# Soft (Latent) Decoding
+
+> Early musings on a new decoding technique.
 
 ## 1. Abstract
 
@@ -50,16 +52,16 @@ Instead of using a discrete token, use the softmax distribution to use tokens we
 ### 2.3 Motivations for Soft Decoding
 
 1. The model may be allowed to maintain it's distribution over each token for each step, so the model's internal state may reflect several distribution simultaneously.
-  - (Kind of like BEAM search without the blowup)
-2. The gradients from from future tokens can propagate through the sampling.
+    - (Kind of like BEAM search without the combinatorial blowup).
+2. The model remains "end-to-end differentiable" -- gradients from from future tokens can propagate through the sampling.
 
 ## 3 Approaches to Creating a Soft Next-Token Embedding
 
 ### 3.1 Plain Softmax Mixture
 
-- Description: Take the model’s logits, apply a standard softmax, then multiply the resulting distribution by the embedding matrix W_E.
-- Pros: Straightforward, fully differentiable, simple to implement.
-- Cons: Tends to produce a “blurry” embedding if the distribution is spread out across many tokens; doesn’t strongly approximate a single discrete token.
+Take the model’s logits, apply a standard softmax, then multiply the resulting distribution by the embedding matrix $W_E$.
+
+- Possible to have "blurry" embedding if distribution is diffuse over many tokens -- doesn't approximate a single token.
 
 ### 3.2. Gumbel-Softmax -- LOOK AT
 
@@ -70,57 +72,51 @@ $$
 \mathbf{y}_t = \text{Softmax}\Bigl(\frac{\mathbf{z}_t + \mathbf{g}_t}{\tau}\Bigr).
 $$
 
-- Why It’s Useful: For low $\tau$, $\mathbf{y}_t$ becomes close to a one-hot vector—mimicking discrete sampling—yet remains differentiable.
-- Applications: Helpful in RL or other contexts needing end-to-end gradient flow through “token choices.”
+For low $\tau$, $\mathbf{y}_t$ becomes close to a one-hot vector—mimicking discrete sampling—yet remains differentiable.
+
+- Helpful for end-to-end gradient flow through "token choices".
 
 ## 4. Challenges and Caveats
 
 ### 4.1 Out-Of-Distribution Inputs
 
-Pretrained LLMs only saw discrete token embeddings during training. A “soft mix” of embeddings can be drastically different distribution from any single token embedding, causing unpredictable outputs. Finetuning will be needed to adapt the model to these continuous embeddings.
+Pretrained LLMs only saw discrete token embeddings during training. A "soft mix" of embeddings can be drastically different distribution from any single token embedding, causing unpredictable outputs. Finetuning will be needed to adapt the model to these continuous embeddings.
 
 ### 4.2 Sequential Fine-Tuning
 
-Each output is dependant on all of the previous outputs, which can be useful for gradient propagation, but is compute inefficient in training.
+Each output is dependant on all previous outputs, which can be useful for gradient propagation, but is compute inefficient in training. Kind of like RNNs.
 
-### 4.3 Blurry or Uninformative Embeddings
+### 4.3 Blurry embeddings / Entropy explosion
 
-If the distribution is too broad, the embedding may become an average over dozens of unrelated tokens. The model might struggle to interpret this.
+If the distribution is too broad, embedding may become uniform over many tokens, which may push the model input off manifold.
 
-We could adjust this with temperature / Gumbel-Softmax / entropy regularization
+Possible solutions:
+
+- Sampling adjustments: temperature, top-k, min-p
+- Gumbel-Softmax?
+- Entropy regularization: $\mathbf{L} = \mathbf{L}_{\text{xent}} + \beta \cdot \mathbf{H}(P)$
+  - $\beta$ is a hyperparameter
+  - $\mathbf{H}$ is the entropy of the distribution $P$
 
 ### 4.4 Scheduled Sampling
 
-Initial training may be chaotic from these random distributions of embeddings. We may need to mix the ground-truth "teacher forcing" embedding to stabilize training.
+Not obvious exactly how to incorportate the ground truth into the sampling. Discrete decoding handles this simply with "teacher-forcing", replacing the predicted embedding with the correct one.
+
+We may need to mix the ground truth with the soft sample to stabilize training.
 
 ### 4.5 Catastrophic Forgetting
 
-Partial freezing (maybe W_E / W_U only?), LoRA, low learning rates.
+- Partial freezing (maybe $W_E$ / first layer only?)
+- LoRA
+- low LR
 
 ### 4.6 Integration with RLHF (PPO)
 
-- Standard RLHF frameworks (like PPO) assume discrete tokens as actions.
-- If you feed a soft distribution, you must either discretize before giving it to a reward model or adapt the reward pipeline to handle continuous “soft text.”
-- Implementation overhead is non-trivial.
+Standard PPO assume discrete tokens as actions.
 
-### 4.7 Entropy explosion
-
-If model produces broad distributions, the next embedding may become uniform across many many tokens, pushing the model input off-manifold for all token embeddings seen before.
-
-This could be solved with topk, minp, small temps, or may not be a problem
-
-Or could be solved with a term in loss that discourages high entropy
-
-$$
-\mathbf{L} = \mathbf{L}_{\text{xent}} + \beta \cdot \mathbf{H}(P)
-$$
-
-Where
-- $\beta$ is a hyperparameter
-- $\mathbf{H}$ is the entropy of the distribution $P$
+- If you feed a soft distribution, you must either discretize before giving it to a reward model.
 
 ## 5. Implementation Sketch
-
 
 ### 5.1 Stage 1: SFT for Soft Decoding
 
@@ -222,14 +218,19 @@ def soft_sampling_train_step(
 
 I think I want a initial `guidance_alpha` of 1 to mimic discrete training to warm start the model to get to a stable baseline before we shift the input distribution. Perhaps warmup `lr` here too. Then warmup `guidance_alpha` to some maximum value.
 
+TODO: how do we want to apply `guidance_alpha`? I think we should clamp the correct token at _at least_ `guidance_alpha` proportion in the probability distribution (this is helpful when the model already gives the correct token a high probability).
+
 ### 5.2 Stage 2: RLHF / PPO
+
+> TODO
 
 ## 6. Additional Considerations
 
-### 6.1 Top-k vs. Soft Mixture
+### 6.1 Comparsion with BEAM
 
-- Beam Search / Self-Consistency: Another way to keep multiple possibilities is to track multiple discrete beams. However, that can explode combinatorially.
-- Soft Approach: We effectively combine multiple tokens into a single “latent” path at each step — more compact, but requires the model to handle fuzzy embeddings.
+Beam Search / Self-Consistency: Another way to keep multiple possibilities is to track multiple discrete beams. However, that can explode combinatorially.
+
+If the soft decoding works, we effectively combine multiple tokens into a single “latent” path at each step.
 
 ### 6.3 Interpretability
 
