@@ -158,7 +158,6 @@ def mk_proba_dist(
 def soft_sampling_train_step(
     model,
     batch, # tokens of shape (batch_size, seq_len)
-    W_E, # model's embedding matrix
     guidance_alpha, # guidance weighting -- 1 equivalent to discrete sampling
     **kwargs, # passed to mk_proba_dist
 ):
@@ -171,6 +170,7 @@ def soft_sampling_train_step(
     past_key_values = None
     position_ids = torch.zeros(batch_size, 1, dtype=torch.long, device=device)
 
+    W_E = model.get_input_embeddings().weight
 
     loss = torch.tensor(0., device=device)
     embeds = W_E[batch[:, :1]]  # BOS shape: (batch_size, 1, d_model)
@@ -209,8 +209,7 @@ def soft_sampling_train_step(
         embeds = torch.cat([embeds, next_embed[:, None, :]], dim=1)
         position_ids += 1
 
-    if return_tokens:
-        tokens = torch.cat(tokens, dim=1)
+    tokens = torch.cat(tokens, dim=1)
     # normalize gradient: sum batch, mean sequence length
     loss /= seq_len
     return loss, tokens
@@ -263,6 +262,8 @@ Alternatively put inside a new `<think>` token or something.
 - Keep multiple reasoning paths alive in a single forward pass.
 - Provide a differentiable approach to token selection, which is valuable in advanced training or RL settings.
 - Fully differentiable through sampling steps
+
+## Integration with HF Trainer
 
 ## References
 
