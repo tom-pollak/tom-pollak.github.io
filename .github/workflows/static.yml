@@ -31,7 +31,7 @@ jobs:
           sudo add-apt-repository universe
           sudo apt-get update -y -qq
           sudo apt install -y \
-            libegl1-mesa \
+            libegl1 \
             libgl1-mesa-dri \
             libxcb-xfixes0-dev \
             mesa-vulkan-drivers
