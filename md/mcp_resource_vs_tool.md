@@ -10,4 +10,4 @@ Surprisingly I haven't seen this analogy been made before, instead most discussi
 
 ---
 
-Simiarly, for HTTP you could make the reductionist argument about http that we actually don’t need GET requests at all, since a POST is just a GET with payload. Yet we use GET everyday for most tasks.
+Similarly, for HTTP you could make the reductionist argument about http that we actually don’t need GET requests at all, since a POST is just a GET with payload. Yet we use GET everyday for most tasks.
