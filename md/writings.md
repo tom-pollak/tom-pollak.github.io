@@ -1,5 +1,6 @@
 # Posts
 
+- [My head canon for MCP resource vs tool](./mcp_resource_vs_tool.html) _3 April 2025_
 - [Soft Sampling](./soft_sampling.html) _4 January 2025_
 - [Writing Shaders with WebGPU](./shaders_wgsl.html) _2 January 2025_
 - [Blender Copilot](./blender_copilot.html) _20 December 2024_
