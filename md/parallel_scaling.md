@@ -6,9 +6,9 @@
 
 Researches at Qwen introduce a new dimension of scaling: parallel forward passes. Their method, PARSCALE, runs $P$ parallel copies of a model, each with a different learned prefix. They find that running $P$ parallel passes is equivalent to scaling the model parameters by $O(\log P)$.
 
-<br>
-<img class="constrained_img" src="{{ page.image_dir | append: 'three-scaling-approaches.png' | relative_url }}">
-<figcaption>Three parallel scaling approaches: Parameter, Inference time, and Parallel computation.</figcaption>
+![Scaling Approaches](../assets/parallel_scaling_laws/three-scaling-approaches.png)
+
+> Three parallel scaling approaches: Parameter, Inference time, and Parallel computation.
 
 ### Background
 
@@ -35,8 +35,9 @@ Dramatically reduces cost of parallel scaling training (which requires $P$ forwa
 
 ### Results
 
-<img class="constrained_img" src="{{ page.image_dir | append: 'parscale-loss-contours.png' | relative_url }}">
-<figcaption>PARSCALE results: Parameter, Inference time, and Parallel computation.</figcaption>
+![PARSCALE results](../assets/parallel_scaling_laws/parscale-loss-contours.png)
+
+> PARSCALE results: Parameter, Inference time, and Parallel computation.
 
 #### Coding Tasks (Stack-V2-Python)
 
