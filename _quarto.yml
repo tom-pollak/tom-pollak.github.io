@@ -1,6 +1,9 @@
 project:
   type: website
-  
+
+execute:
+  freeze: true
+
 website:
   site-url: https://tom-pollak.github.io/
   page-footer:
