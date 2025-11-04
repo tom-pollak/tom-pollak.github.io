@@ -2,6 +2,7 @@
 
 - [GPU Jargon](./gpu-jargon.html) _3 November 2025_
 - [Beating Traitors](./beating_traitors.html) _October 22 2025_
+- [Column vs Row-major Formats](./column_vs_row_major.html) _July 12 2025_
 - [Paper review: Parallel Scaling Laws for Language Models](./parallel_scaling.html) _May 12 2025_
 - [My head canon for MCP resource vs tool](./mcp_resource_vs_tool.html) _3 April 2025_
 - [TP](./tensor_parallel.html) _4 Febuary 2025_
