@@ -1,5 +1,6 @@
 # Posts
 
+- [Linear Layouts For Dummies](./linear-layouts-for-dummies.html) _3 November 2025_
 - [GPU Jargon](./gpu-jargon.html) _3 November 2025_
 - [Beating Traitors](./beating_traitors.html) _October 22 2025_
 - [Column vs Row-major Formats](./column_vs_row_major.html) _July 12 2025_
